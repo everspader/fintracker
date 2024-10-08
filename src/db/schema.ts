@@ -1,0 +1,136 @@
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  decimal,
+  pgEnum,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+// Enums
+export const transactionTypeEnum = pgEnum("transaction_type", [
+  "expense",
+  "income",
+]);
+export const accountTypeEnum = pgEnum("account_type", [
+  "credit",
+  "debit",
+  "investment",
+]);
+
+// Helper Tables
+export const groups = pgTable("groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+});
+
+export const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id),
+});
+
+export const accounts = pgTable("accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  type: accountTypeEnum("type").notNull(),
+});
+
+export const currencies = pgTable("currencies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+});
+
+export const tags = pgTable("tags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+});
+
+// Main Transaction Log Table
+export const transactions = pgTable("transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  entryDate: timestamp("entry_date").notNull().defaultNow(),
+  type: transactionTypeEnum("type").notNull(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => categories.id),
+  accountId: uuid("account_id")
+    .notNull()
+    .references(() => accounts.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currencyId: uuid("currency_id")
+    .notNull()
+    .references(() => currencies.id),
+  description: text("description"),
+});
+
+// Junction Tables for Many-to-Many Relations
+export const accountCurrencies = pgTable("account_currencies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accountId: uuid("account_id")
+    .notNull()
+    .references(() => accounts.id),
+  currencyId: uuid("currency_id")
+    .notNull()
+    .references(() => currencies.id),
+});
+
+export const transactionTags = pgTable("transaction_tags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  transactionId: uuid("transaction_id")
+    .notNull()
+    .references(() => transactions.id),
+  tagId: uuid("tag_id")
+    .notNull()
+    .references(() => tags.id),
+});
+
+// Relations
+export const groupsRelations = relations(groups, ({ many }) => ({
+  categories: many(categories),
+}));
+
+export const categoriesRelations = relations(categories, ({ one }) => ({
+  group: one(groups, {
+    fields: [categories.groupId],
+    references: [groups.id],
+  }),
+}));
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  currencies: many(accountCurrencies),
+  transactions: many(transactions),
+}));
+
+export const currenciesRelations = relations(currencies, ({ many }) => ({
+  accounts: many(accountCurrencies),
+  transactions: many(transactions),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  transactions: many(transactionTags),
+}));
+
+export const transactionsRelations = relations(
+  transactions,
+  ({ one, many }) => ({
+    category: one(categories, {
+      fields: [transactions.categoryId],
+      references: [categories.id],
+    }),
+    account: one(accounts, {
+      fields: [transactions.accountId],
+      references: [accounts.id],
+    }),
+    currency: one(currencies, {
+      fields: [transactions.currencyId],
+      references: [currencies.id],
+    }),
+    tags: many(transactionTags),
+  })
+);
