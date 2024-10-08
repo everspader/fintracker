@@ -5,6 +5,7 @@ import {
   timestamp,
   decimal,
   pgEnum,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -70,25 +71,35 @@ export const transactions = pgTable("transactions", {
 });
 
 // Junction Tables for Many-to-Many Relations
-export const accountCurrencies = pgTable("account_currencies", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  accountId: uuid("account_id")
-    .notNull()
-    .references(() => accounts.id),
-  currencyId: uuid("currency_id")
-    .notNull()
-    .references(() => currencies.id),
-});
+export const accountCurrencies = pgTable(
+  "account_currencies",
+  {
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id),
+    currencyId: uuid("currency_id")
+      .notNull()
+      .references(() => currencies.id),
+  },
+  (table) => ({
+    pk: primaryKey(table.accountId, table.currencyId),
+  })
+);
 
-export const transactionTags = pgTable("transaction_tags", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  transactionId: uuid("transaction_id")
-    .notNull()
-    .references(() => transactions.id),
-  tagId: uuid("tag_id")
-    .notNull()
-    .references(() => tags.id),
-});
+export const transactionTags = pgTable(
+  "transaction_tags",
+  {
+    transactionId: uuid("transaction_id")
+      .notNull()
+      .references(() => transactions.id),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id),
+  },
+  (table) => ({
+    pk: primaryKey(table.transactionId, table.tagId),
+  })
+);
 
 // Relations
 export const groupsRelations = relations(groups, ({ many }) => ({
@@ -112,6 +123,20 @@ export const currenciesRelations = relations(currencies, ({ many }) => ({
   transactions: many(transactions),
 }));
 
+export const accountCurrenciesRelations = relations(
+  accountCurrencies,
+  ({ one }) => ({
+    account: one(accounts, {
+      fields: [accountCurrencies.accountId],
+      references: [accounts.id],
+    }),
+    currency: one(currencies, {
+      fields: [accountCurrencies.currencyId],
+      references: [currencies.id],
+    }),
+  })
+);
+
 export const tagsRelations = relations(tags, ({ many }) => ({
   transactions: many(transactionTags),
 }));
@@ -132,5 +157,19 @@ export const transactionsRelations = relations(
       references: [currencies.id],
     }),
     tags: many(transactionTags),
+  })
+);
+
+export const transactionTagsRelations = relations(
+  transactionTags,
+  ({ one }) => ({
+    transaction: one(transactions, {
+      fields: [transactionTags.transactionId],
+      references: [transactions.id],
+    }),
+    tag: one(tags, {
+      fields: [transactionTags.tagId],
+      references: [tags.id],
+    }),
   })
 );
