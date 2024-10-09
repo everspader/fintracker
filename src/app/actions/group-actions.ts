@@ -66,35 +66,27 @@ export async function updateGroup(
   groupId: string,
   groupName: string,
   categoryNames: string[]
-): Promise<GroupResult> {
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const existingGroup = await db
-      .select()
-      .from(groups)
-      .where(eq(groups.name, groupName))
-      .where(eq(groups.id, groupId).not())
-      .limit(1);
-
-    if (existingGroup.length > 0) {
-      return { success: false, error: "A group with this name already exists" };
-    }
-
-    return await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
+      // Update group name
       await tx
         .update(groups)
         .set({ name: groupName })
         .where(eq(groups.id, groupId));
 
+      // Delete existing categories
       await tx.delete(categories).where(eq(categories.groupId, groupId));
 
+      // Insert new categories
       if (categoryNames.length > 0) {
         await tx
           .insert(categories)
           .values(categoryNames.map((name) => ({ name, groupId })));
       }
-
-      return { success: true, groupId };
     });
+
+    return { success: true };
   } catch (error) {
     console.error("Failed to update group:", error);
     return { success: false, error: "Failed to update group" };
