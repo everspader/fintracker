@@ -1,13 +1,13 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Client } from "pg";
-import * as schema from "@/db/schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
+import dotenv from "dotenv";
 
-const connectionString = process.env.DATABASE_URL;
-const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-});
+dotenv.config();
 
-console.log(connectionString);
-await client.connect();
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
 
+export const client = postgres(process.env.DATABASE_URL);
 export const db = drizzle(client, { schema });
