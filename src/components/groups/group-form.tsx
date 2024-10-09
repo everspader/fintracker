@@ -1,23 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, X } from "lucide-react";
+import { createGroup } from "@/app/actions/group-actions";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GroupForm() {
   const [groupName, setGroupName] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitted:", { groupName, categories });
-    setGroupName("");
-    setCategories([]);
-    setCategoryInput("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await createGroup(groupName, categories);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Group "${groupName}" created successfully.`,
+        });
+        // Reset form
+        setGroupName("");
+        setCategories([]);
+        setCategoryInput("");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create group. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddCategory = () => {
@@ -112,8 +137,15 @@ export default function GroupForm() {
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isSubmitting}
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Group
+              {isSubmitting ? (
+                "Creating..."
+              ) : (
+                <React.Fragment>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Create Group
+                </React.Fragment>
+              )}
             </Button>
           </form>
         </CardContent>
