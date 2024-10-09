@@ -24,6 +24,7 @@ export const accountTypeEnum = pgEnum("account_type", [
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const categories = pgTable("categories", {
@@ -32,12 +33,14 @@ export const categories = pgTable("categories", {
   groupId: uuid("group_id")
     .notNull()
     .references(() => groups.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
   type: accountTypeEnum("type").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const currencies = pgTable("currencies", {
@@ -68,6 +71,7 @@ export const transactions = pgTable("transactions", {
     .notNull()
     .references(() => currencies.id),
   description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Junction Tables for Many-to-Many Relations

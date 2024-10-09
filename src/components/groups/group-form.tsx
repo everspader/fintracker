@@ -37,7 +37,10 @@ export default function GroupForm() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create group. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create group. Please try again.",
         variant: "destructive",
       });
     } finally {
