@@ -7,41 +7,45 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, X } from "lucide-react";
 import { createGroup } from "@/app/actions/group-actions";
-import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+type FormError = {
+  field: string;
+  message: string;
+};
 
 export default function GroupForm() {
   const [groupName, setGroupName] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const [formError, setFormError] = useState<FormError | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setFormError(null);
+    setSuccessMessage(null);
 
     try {
       const result = await createGroup(groupName, categories);
       if (result.success) {
-        toast({
-          title: "Success",
-          description: `Group "${groupName}" created successfully.`,
-        });
+        setSuccessMessage(`Group "${groupName}" created successfully.`);
         // Reset form
         setGroupName("");
         setCategories([]);
         setCategoryInput("");
       } else {
-        throw new Error(result.error);
+        setFormError({ field: "groupName", message: result.error });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
+      setFormError({
+        field: "groupName",
+        message:
           error instanceof Error
             ? error.message
             : "Failed to create group. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -73,6 +77,9 @@ export default function GroupForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {successMessage && (
+              <p className="text-green-400 text-sm mt-2">{successMessage}</p>
+            )}
             <div className="space-y-2">
               <label
                 htmlFor="groupName"
@@ -84,10 +91,17 @@ export default function GroupForm() {
                 id="groupName"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                className={cn(
+                  "bg-gray-700 border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500",
+                  formError?.field === "groupName" &&
+                    "border-red-500 focus:ring-red-500 focus:border-red-500"
+                )}
                 placeholder="Enter group name"
                 required
               />
+              {formError?.field === "groupName" && (
+                <p className="text-red-400 text-sm mt-2">{formError.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <label
