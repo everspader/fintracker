@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, X } from "lucide-react";
-import { createGroup } from "@/app/actions/group-actions";
+import { createGroup, updateGroup } from "@/app/actions/group-actions";
 import { cn } from "@/lib/utils";
 
 type FormError = {
@@ -14,13 +14,38 @@ type FormError = {
   message: string;
 };
 
-export default function GroupForm() {
-  const [groupName, setGroupName] = useState("");
-  const [categories, setCategories] = useState<string[]>([]);
+interface GroupFormProps {
+  initialData?: {
+    id: string;
+    name: string;
+    categories: string[];
+  };
+  onSubmitSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export function GroupForm({
+  initialData,
+  onSubmitSuccess,
+  onCancel,
+}: GroupFormProps) {
+  const [groupName, setGroupName] = useState(initialData?.name || "");
+  const [categories, setCategories] = useState<string[]>(
+    initialData?.categories || []
+  );
   const [categoryInput, setCategoryInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<FormError | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const isEditMode = !!initialData?.id;
+
+  useEffect(() => {
+    if (initialData) {
+      setGroupName(initialData.name);
+      setCategories(initialData.categories);
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,13 +54,26 @@ export default function GroupForm() {
     setSuccessMessage(null);
 
     try {
-      const result = await createGroup(groupName, categories);
+      let result;
+      if (isEditMode) {
+        result = await updateGroup(initialData.id, groupName, categories);
+      } else {
+        result = await createGroup(groupName, categories);
+      }
+
       if (result.success) {
-        setSuccessMessage(`Group "${groupName}" created successfully.`);
-        // Reset form
-        setGroupName("");
-        setCategories([]);
-        setCategoryInput("");
+        setSuccessMessage(
+          `Group "${groupName}" ${
+            isEditMode ? "updated" : "created"
+          } successfully.`
+        );
+        if (!isEditMode) {
+          // Reset form only for create mode
+          setGroupName("");
+          setCategories([]);
+          setCategoryInput("");
+        }
+        onSubmitSuccess?.();
       } else {
         setFormError({ field: "groupName", message: result.error });
       }
@@ -45,7 +83,9 @@ export default function GroupForm() {
         message:
           error instanceof Error
             ? error.message
-            : "Failed to create group. Please try again.",
+            : `Failed to ${
+                isEditMode ? "update" : "create"
+              } group. Please try again.`,
       });
     } finally {
       setIsSubmitting(false);
@@ -72,7 +112,7 @@ export default function GroupForm() {
       <Card className="w-full max-w-md bg-gray-800 text-gray-100 shadow-xl border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Create New Group
+            {isEditMode ? "Edit Group" : "Create New Group"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -151,19 +191,35 @@ export default function GroupForm() {
                 </Button>
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                "Creating..."
-              ) : (
-                <React.Fragment>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Create Group
-                </React.Fragment>
+            <div className="flex justify-end space-x-2">
+              {onCancel && (
+                <Button
+                  type="button"
+                  onClick={onCancel}
+                  className="bg-gray-600 hover:bg-gray-700 text-white"
+                >
+                  Cancel
+                </Button>
               )}
-            </Button>
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  isEditMode ? (
+                    "Updating..."
+                  ) : (
+                    "Creating..."
+                  )
+                ) : (
+                  <React.Fragment>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {isEditMode ? "Update Group" : "Create Group"}
+                  </React.Fragment>
+                )}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
