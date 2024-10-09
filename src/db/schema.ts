@@ -71,6 +71,9 @@ export const transactions = pgTable("transactions", {
     .notNull()
     .references(() => currencies.id),
   description: text("description"),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -158,6 +161,10 @@ export const transactionsRelations = relations(
     currency: one(currencies, {
       fields: [transactions.currencyId],
       references: [currencies.id],
+    }),
+    group: one(groups, {
+      fields: [transactions.groupId],
+      references: [groups.id],
     }),
     tags: many(transactionTags),
   })

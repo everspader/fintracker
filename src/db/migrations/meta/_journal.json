@@ -15,6 +15,13 @@
       "when": 1728454418769,
       "tag": "0001_flippant_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1728500290591,
+      "tag": "0002_zippy_hulk",
+      "breakpoints": true
     }
   ]
 }

@@ -8,14 +8,14 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 export type Transaction = {
   id: string;
   entryDate: string;
-  entryType: "income" | "expense";
-  group: string;
+  type: string;
   category: string;
   account: string;
   currency: string;
   amount: number;
   description: string;
   tags: string[];
+  group: string;
 };
 
 export const columns: ColumnDef<Transaction>[] = [
@@ -45,15 +45,13 @@ export const columns: ColumnDef<Transaction>[] = [
     ),
   },
   {
-    accessorKey: "entryType",
+    accessorKey: "type",
     header: "Type",
     cell: ({ row }) => (
       <Badge
-        variant={
-          row.original.entryType === "income" ? "default" : "destructive"
-        }
+        variant={row.original.type === "income" ? "default" : "destructive"}
       >
-        {row.original.entryType}
+        {row.original.type}
       </Badge>
     ),
   },
