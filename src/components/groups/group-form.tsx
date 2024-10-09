@@ -75,7 +75,7 @@ export function GroupForm({
         }
         onSubmitSuccess?.();
       } else {
-        setFormError({ field: "groupName", message: result.error });
+        setFormError({ field: "groupName", message: result.error! });
       }
     } catch (error) {
       setFormError({
