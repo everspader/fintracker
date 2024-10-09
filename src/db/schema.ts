@@ -74,7 +74,6 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Junction Tables for Many-to-Many Relations
 export const accountCurrencies = pgTable(
   "account_currencies",
   {
@@ -86,7 +85,7 @@ export const accountCurrencies = pgTable(
       .references(() => currencies.id),
   },
   (table) => ({
-    pk: primaryKey(table.accountId, table.currencyId),
+    pk: primaryKey({ columns: [table.accountId, table.currencyId] }),
   })
 );
 
@@ -101,7 +100,7 @@ export const transactionTags = pgTable(
       .references(() => tags.id),
   },
   (table) => ({
-    pk: primaryKey(table.transactionId, table.tagId),
+    pk: primaryKey({ columns: [table.transactionId, table.tagId] }),
   })
 );
 
