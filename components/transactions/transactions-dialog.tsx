@@ -86,6 +86,19 @@ export default function AddTransactionDialog({
     },
   });
 
+  const resetForm = () => {
+    form.reset({
+      entryDate: new Date().toISOString().split("T")[0],
+      type: "expense",
+      groupId: "",
+      categoryId: "",
+      accountId: "",
+      currencyId: "",
+      amount: 0,
+      description: "",
+    });
+  };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -119,7 +132,10 @@ export default function AddTransactionDialog({
     );
   }, [form.watch("groupId"), categories]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(
+    values: z.infer<typeof formSchema>,
+    addAnother: boolean
+  ) {
     try {
       const transactionData = {
         entryDate: values.entryDate,
@@ -127,7 +143,10 @@ export default function AddTransactionDialog({
         categoryId: values.categoryId,
         accountId: values.accountId,
         currencyId: values.currencyId,
-        amount: values.amount,
+        amount:
+          values.type === "expense"
+            ? -Math.abs(values.amount)
+            : Math.abs(values.amount),
         description: values.description,
         groupId: values.groupId,
       };
@@ -137,7 +156,11 @@ export default function AddTransactionDialog({
         description: "Transaction added successfully.",
       });
       onTransactionAdded();
-      onOpenChange(false);
+      if (addAnother) {
+        resetForm();
+      } else {
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error("Failed to add transaction:", error);
       toast({
@@ -148,8 +171,15 @@ export default function AddTransactionDialog({
     }
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Transaction</DialogTitle>
@@ -158,7 +188,10 @@ export default function AddTransactionDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit((values) => onSubmit(values, false))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="entryDate"
@@ -202,10 +235,7 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Group</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a group" />
@@ -229,10 +259,7 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
@@ -256,10 +283,7 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Account</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an account" />
@@ -283,10 +307,7 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a currency" />
@@ -337,7 +358,16 @@ export default function AddTransactionDialog({
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Transaction</Button>
+              <Button type="submit">Save</Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  form.handleSubmit((values) => onSubmit(values, true))()
+                }
+              >
+                Save and Add Another
+              </Button>
             </DialogFooter>
           </form>
         </Form>
