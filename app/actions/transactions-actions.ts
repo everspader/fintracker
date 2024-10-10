@@ -69,3 +69,88 @@ export async function getTransactions(): Promise<Transaction[]> {
     throw new Error("Failed to fetch transactions");
   }
 }
+
+export async function getGroups() {
+  try {
+    return await db.select().from(groups);
+  } catch (error) {
+    console.error("Failed to fetch groups:", error);
+    throw new Error("Failed to fetch groups");
+  }
+}
+
+export async function getCategories() {
+  try {
+    return await db.select().from(categories);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    throw new Error("Failed to fetch categories");
+  }
+}
+
+export async function getAccounts() {
+  try {
+    return await db.select().from(accounts);
+  } catch (error) {
+    console.error("Failed to fetch accounts:", error);
+    throw new Error("Failed to fetch accounts");
+  }
+}
+
+export async function getCurrencies() {
+  try {
+    return await db.select().from(currencies);
+  } catch (error) {
+    console.error("Failed to fetch currencies:", error);
+    throw new Error("Failed to fetch currencies");
+  }
+}
+
+export async function addTransaction(transactionData: Omit<Transaction, "id">) {
+  try {
+    const { tags: tagNames, ...transactionFields } = transactionData;
+
+    // Insert the transaction
+    const [insertedTransaction] = await db
+      .insert(transactions)
+      .values(transactionFields)
+      .returning();
+
+    // Handle tags
+    if (tagNames && tagNames.length > 0) {
+      for (const tagName of tagNames) {
+        // Find or create the tag
+        let [tag] = await db.select().from(tags).where(eq(tags.name, tagName));
+        if (!tag) {
+          [tag] = await db.insert(tags).values({ name: tagName }).returning();
+        }
+
+        // Create the transaction-tag association
+        await db.insert(transactionTags).values({
+          transactionId: insertedTransaction.id,
+          tagId: tag.id,
+        });
+      }
+    }
+
+    return insertedTransaction;
+  } catch (error) {
+    console.error("Failed to add transaction:", error);
+    throw new Error("Failed to add transaction");
+  }
+}
+
+export async function deleteTransactions(ids: string[]) {
+  try {
+    // First, delete associated tags
+    await db
+      .delete(transactionTags)
+      .where(inArray(transactionTags.transactionId, ids));
+
+    // Then delete the transactions
+    await db.delete(transactions).where(inArray(transactions.id, ids));
+  } catch (error) {
+    console.error("Failed to delete transactions:", error);
+    throw new Error("Failed to delete transactions");
+  }
+}

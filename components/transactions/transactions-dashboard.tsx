@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { Transaction, columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
-import { getTransactions } from "@/app/actions/transactions-actions";
+import {
+  getTransactions,
+  deleteTransactions,
+} from "@/app/actions/transactions-actions";
 import AddTransactionDialog from "./transactions-dialog";
 import {
   AlertDialog,
@@ -17,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TransactionDashboard() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -24,39 +28,63 @@ export default function TransactionDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const fetchTransactions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const fetchedTransactions = await getTransactions();
+      setTransactions(fetchedTransactions);
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch transactions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    async function fetchTransactions() {
-      setIsLoading(true);
-      try {
-        const fetchedTransactions = await getTransactions();
-        setTransactions(fetchedTransactions);
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error);
-        // Optionally, set an error state here to display to the user
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
 
   const handleDeleteSelected = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = useCallback(() => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.filter((t) => !selectedRows.includes(t))
-    );
-    setSelectedRows([]);
-    setIsDeleteDialogOpen(false);
-  }, [selectedRows]);
+  const confirmDelete = useCallback(async () => {
+    try {
+      await deleteTransactions(selectedRows.map((row) => row.id));
+      setTransactions((prevTransactions) =>
+        prevTransactions.filter((t) => !selectedRows.includes(t))
+      );
+      setSelectedRows([]);
+      toast({
+        title: "Success",
+        description: "Selected transactions have been deleted.",
+      });
+    } catch (error) {
+      console.error("Failed to delete transactions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete transactions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
+  }, [selectedRows, toast]);
 
   const handleRowsSelected = useCallback((rows: Transaction[]) => {
     setSelectedRows(rows);
   }, []);
+
+  const handleTransactionAdded = useCallback(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   return (
     <div className="space-y-4">
@@ -87,6 +115,7 @@ export default function TransactionDashboard() {
       <AddTransactionDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+        onTransactionAdded={handleTransactionAdded}
       />
       <AlertDialog
         open={isDeleteDialogOpen}
