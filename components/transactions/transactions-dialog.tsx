@@ -122,9 +122,14 @@ export default function AddTransactionDialog({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const transactionData = {
-        ...values,
-        amount: parseFloat(values.amount.toString()),
+        entryDate: values.entryDate,
         type: values.type as "income" | "expense",
+        categoryId: values.categoryId,
+        accountId: values.accountId,
+        currencyId: values.currencyId,
+        amount: values.amount,
+        description: values.description,
+        groupId: values.groupId,
       };
       await addTransaction(transactionData);
       toast({

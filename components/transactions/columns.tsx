@@ -8,12 +8,16 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 export type Transaction = {
   id: string;
   entryDate: string;
-  type: string;
+  type: "income" | "expense";
+  categoryId: string;
   category: string;
+  accountId: string;
   account: string;
+  currencyId: string;
   currency: string;
   amount: number;
   description: string;
+  groupId: string;
   group: string;
 };
 

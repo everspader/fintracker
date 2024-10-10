@@ -9,7 +9,43 @@ import {
   groups,
 } from "@/db/schema";
 import { Transaction } from "@/components/transactions/columns";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
+
+export async function getGroups() {
+  try {
+    return await db.select().from(groups);
+  } catch (error) {
+    console.error("Failed to fetch groups:", error);
+    throw new Error("Failed to fetch groups");
+  }
+}
+
+export async function getCategories() {
+  try {
+    return await db.select().from(categories);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    throw new Error("Failed to fetch categories");
+  }
+}
+
+export async function getAccounts() {
+  try {
+    return await db.select().from(accounts);
+  } catch (error) {
+    console.error("Failed to fetch accounts:", error);
+    throw new Error("Failed to fetch accounts");
+  }
+}
+
+export async function getCurrencies() {
+  try {
+    return await db.select().from(currencies);
+  } catch (error) {
+    console.error("Failed to fetch currencies:", error);
+    throw new Error("Failed to fetch currencies");
+  }
+}
 
 export async function getTransactions(): Promise<Transaction[]> {
   try {
@@ -56,47 +92,25 @@ export async function getTransactions(): Promise<Transaction[]> {
   }
 }
 
-export async function getGroups() {
-  try {
-    return await db.select().from(groups);
-  } catch (error) {
-    console.error("Failed to fetch groups:", error);
-    throw new Error("Failed to fetch groups");
-  }
-}
-
-export async function getCategories() {
-  try {
-    return await db.select().from(categories);
-  } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    throw new Error("Failed to fetch categories");
-  }
-}
-
-export async function getAccounts() {
-  try {
-    return await db.select().from(accounts);
-  } catch (error) {
-    console.error("Failed to fetch accounts:", error);
-    throw new Error("Failed to fetch accounts");
-  }
-}
-
-export async function getCurrencies() {
-  try {
-    return await db.select().from(currencies);
-  } catch (error) {
-    console.error("Failed to fetch currencies:", error);
-    throw new Error("Failed to fetch currencies");
-  }
-}
-
-export async function addTransaction(transactionData: Omit<Transaction, "id">) {
+export async function addTransaction(
+  transactionData: Omit<
+    Transaction,
+    "id" | "category" | "account" | "currency" | "group"
+  >
+) {
   try {
     const [insertedTransaction] = await db
       .insert(transactions)
-      .values(transactionData)
+      .values({
+        entryDate: new Date(transactionData.entryDate),
+        type: transactionData.type,
+        categoryId: transactionData.categoryId,
+        accountId: transactionData.accountId,
+        amount: sql`${transactionData.amount}::decimal(10,2)`, // Convert to decimal
+        currencyId: transactionData.currencyId,
+        description: transactionData.description,
+        groupId: transactionData.groupId,
+      })
       .returning();
 
     return insertedTransaction;
