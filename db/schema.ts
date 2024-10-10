@@ -49,12 +49,6 @@ export const currencies = pgTable("currencies", {
   name: text("name").notNull(),
 });
 
-export const tags = pgTable("tags", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-});
-
 // Main Transaction Log Table
 export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -89,21 +83,6 @@ export const accountCurrencies = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.accountId, table.currencyId] }),
-  })
-);
-
-export const transactionTags = pgTable(
-  "transaction_tags",
-  {
-    transactionId: uuid("transaction_id")
-      .notNull()
-      .references(() => transactions.id),
-    tagId: uuid("tag_id")
-      .notNull()
-      .references(() => tags.id),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.transactionId, table.tagId] }),
   })
 );
 
@@ -143,43 +122,21 @@ export const accountCurrenciesRelations = relations(
   })
 );
 
-export const tagsRelations = relations(tags, ({ many }) => ({
-  transactions: many(transactionTags),
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  category: one(categories, {
+    fields: [transactions.categoryId],
+    references: [categories.id],
+  }),
+  account: one(accounts, {
+    fields: [transactions.accountId],
+    references: [accounts.id],
+  }),
+  currency: one(currencies, {
+    fields: [transactions.currencyId],
+    references: [currencies.id],
+  }),
+  group: one(groups, {
+    fields: [transactions.groupId],
+    references: [groups.id],
+  }),
 }));
-
-export const transactionsRelations = relations(
-  transactions,
-  ({ one, many }) => ({
-    category: one(categories, {
-      fields: [transactions.categoryId],
-      references: [categories.id],
-    }),
-    account: one(accounts, {
-      fields: [transactions.accountId],
-      references: [accounts.id],
-    }),
-    currency: one(currencies, {
-      fields: [transactions.currencyId],
-      references: [currencies.id],
-    }),
-    group: one(groups, {
-      fields: [transactions.groupId],
-      references: [groups.id],
-    }),
-    tags: many(transactionTags),
-  })
-);
-
-export const transactionTagsRelations = relations(
-  transactionTags,
-  ({ one }) => ({
-    transaction: one(transactions, {
-      fields: [transactionTags.transactionId],
-      references: [transactions.id],
-    }),
-    tag: one(tags, {
-      fields: [transactionTags.tagId],
-      references: [tags.id],
-    }),
-  })
-);

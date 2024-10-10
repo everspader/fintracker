@@ -22,6 +22,13 @@
       "when": 1728500290591,
       "tag": "0002_zippy_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1728586035740,
+      "tag": "0003_stormy_dormammu",
+      "breakpoints": true
     }
   ]
 }
