@@ -14,7 +14,6 @@ export type Transaction = {
   currency: string;
   amount: number;
   description: string;
-  tags: string[];
   group: string;
 };
 
@@ -93,18 +92,5 @@ export const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "description",
     header: "Description",
-  },
-  {
-    accessorKey: "tags",
-    header: "Tags",
-    cell: ({ row }) => (
-      <div className="flex flex-wrap gap-1">
-        {row.original.tags.map((tag) => (
-          <Badge key={tag} variant="outline">
-            {tag}
-          </Badge>
-        ))}
-      </div>
-    ),
   },
 ];

@@ -6,8 +6,6 @@ import {
   categories,
   accounts,
   currencies,
-  transactionTags,
-  tags,
   groups,
 } from "@/db/schema";
 import { Transaction } from "@/components/transactions/columns";
@@ -29,6 +27,7 @@ export async function getTransactions(): Promise<Transaction[]> {
         accountName: accounts.name,
         currencyCode: currencies.code,
         groupName: groups.name,
+        groupId: transactions.groupId,
       })
       .from(transactions)
       .leftJoin(categories, eq(transactions.categoryId, categories.id))
@@ -36,33 +35,20 @@ export async function getTransactions(): Promise<Transaction[]> {
       .leftJoin(currencies, eq(transactions.currencyId, currencies.id))
       .leftJoin(groups, eq(transactions.groupId, groups.id));
 
-    const transactionIds = result.map((row) => row.id);
-    const tagsResult = await db
-      .select({
-        transactionId: transactionTags.transactionId,
-        tagName: tags.name,
-      })
-      .from(transactionTags)
-      .leftJoin(tags, eq(transactionTags.tagId, tags.id))
-      .where(inArray(transactionTags.transactionId, transactionIds));
-
-    const tagMap = tagsResult.reduce((acc, { transactionId, tagName }) => {
-      if (!acc[transactionId]) acc[transactionId] = [];
-      if (tagName) acc[transactionId].push(tagName);
-      return acc;
-    }, {} as Record<string, string[]>);
-
     return result.map((row) => ({
       id: row.id,
       entryDate: row.entryDate?.toISOString().split("T")[0] ?? "",
-      type: row.type ?? "",
+      type: row.type ?? "expense",
       category: row.categoryName ?? "",
       account: row.accountName ?? "",
       currency: row.currencyCode ?? "",
       amount: row.amount ? parseFloat(row.amount.toString()) : 0,
       description: row.description ?? "",
-      tags: tagMap[row.id] ?? [],
       group: row.groupName ?? "",
+      groupId: row.groupId ?? "",
+      categoryId: row.categoryId ?? "",
+      accountId: row.accountId ?? "",
+      currencyId: row.currencyId ?? "",
     }));
   } catch (error) {
     console.error("Failed to fetch transactions:", error);
@@ -108,30 +94,10 @@ export async function getCurrencies() {
 
 export async function addTransaction(transactionData: Omit<Transaction, "id">) {
   try {
-    const { tags: tagNames, ...transactionFields } = transactionData;
-
-    // Insert the transaction
     const [insertedTransaction] = await db
       .insert(transactions)
-      .values(transactionFields)
+      .values(transactionData)
       .returning();
-
-    // Handle tags
-    if (tagNames && tagNames.length > 0) {
-      for (const tagName of tagNames) {
-        // Find or create the tag
-        let [tag] = await db.select().from(tags).where(eq(tags.name, tagName));
-        if (!tag) {
-          [tag] = await db.insert(tags).values({ name: tagName }).returning();
-        }
-
-        // Create the transaction-tag association
-        await db.insert(transactionTags).values({
-          transactionId: insertedTransaction.id,
-          tagId: tag.id,
-        });
-      }
-    }
 
     return insertedTransaction;
   } catch (error) {
@@ -142,12 +108,6 @@ export async function addTransaction(transactionData: Omit<Transaction, "id">) {
 
 export async function deleteTransactions(ids: string[]) {
   try {
-    // First, delete associated tags
-    await db
-      .delete(transactionTags)
-      .where(inArray(transactionTags.transactionId, ids));
-
-    // Then delete the transactions
     await db.delete(transactions).where(inArray(transactions.id, ids));
   } catch (error) {
     console.error("Failed to delete transactions:", error);

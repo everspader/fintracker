@@ -49,7 +49,6 @@ const formSchema = z.object({
   currencyId: z.string(),
   amount: z.number().positive(),
   description: z.string(),
-  tags: z.string(),
 });
 
 type Group = { id: string; name: string };
@@ -84,7 +83,6 @@ export default function AddTransactionDialog({
       currencyId: "",
       amount: 0,
       description: "",
-      tags: "",
     },
   });
 
@@ -126,12 +124,7 @@ export default function AddTransactionDialog({
       const transactionData = {
         ...values,
         amount: parseFloat(values.amount.toString()),
-        tags: values.tags.split(",").map((tag) => tag.trim()),
         type: values.type as "income" | "expense",
-        category: { id: values.categoryId },
-        account: { id: values.accountId },
-        currency: { id: values.currencyId },
-        group: { id: values.groupId },
       };
       await addTransaction(transactionData);
       toast({
@@ -333,19 +326,6 @@ export default function AddTransactionDialog({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
