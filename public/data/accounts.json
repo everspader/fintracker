@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "Checking Account",
+    "type": "debit",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "name": "Savings Account",
+    "type": "debit",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "3",
+    "name": "Credit Card",
+    "type": "credit",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "4",
+    "name": "Investment Account",
+    "type": "investment",
+    "createdAt": "2024-03-01T00:00:00Z"
+  }
+]

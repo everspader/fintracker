@@ -1,0 +1,56 @@
+[
+  {
+    "id": "1",
+    "name": "Groceries",
+    "groupId": "1",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "name": "Restaurants",
+    "groupId": "1",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "3",
+    "name": "Bars & Cafes",
+    "groupId": "1",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "4",
+    "name": "Public Transit",
+    "groupId": "2",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "5",
+    "name": "Taxi & Ride Sharing",
+    "groupId": "2",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "6",
+    "name": "Gas & Fuel",
+    "groupId": "2",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "7",
+    "name": "Rent",
+    "groupId": "3",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "8",
+    "name": "Utilities",
+    "groupId": "3",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "9",
+    "name": "Home Maintenance",
+    "groupId": "3",
+    "createdAt": "2024-03-01T00:00:00Z"
+  }
+]

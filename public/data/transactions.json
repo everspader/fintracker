@@ -1,0 +1,67 @@
+[
+  {
+    "id": "1",
+    "entryDate": "2024-03-01T12:00:00Z",
+    "type": "expense",
+    "categoryId": "2",
+    "accountId": "1",
+    "amount": 50.0,
+    "currencyId": "1",
+    "description": "Lunch at restaurant",
+    "groupId": "1",
+    "createdAt": "2024-03-01T12:00:00Z",
+    "tags": ["food", "dining out"]
+  },
+  {
+    "id": "2",
+    "entryDate": "2024-03-02T09:00:00Z",
+    "type": "expense",
+    "categoryId": "5",
+    "accountId": "3",
+    "amount": 30.0,
+    "currencyId": "1",
+    "description": "Uber ride",
+    "groupId": "2",
+    "createdAt": "2024-03-02T09:00:00Z",
+    "tags": ["transportation"]
+  },
+  {
+    "id": "3",
+    "entryDate": "2024-03-03T14:00:00Z",
+    "type": "expense",
+    "categoryId": "9",
+    "accountId": "3",
+    "amount": 100.0,
+    "currencyId": "1",
+    "description": "Home repairs",
+    "groupId": "3",
+    "createdAt": "2024-03-03T14:00:00Z",
+    "tags": ["house", "maintenance"]
+  },
+  {
+    "id": "4",
+    "entryDate": "2024-03-05T10:00:00Z",
+    "type": "expense",
+    "categoryId": "1",
+    "accountId": "1",
+    "amount": 150.0,
+    "currencyId": "1",
+    "description": "Weekly grocery shopping",
+    "groupId": "1",
+    "createdAt": "2024-03-05T10:00:00Z",
+    "tags": ["food", "groceries"]
+  },
+  {
+    "id": "5",
+    "entryDate": "2024-03-10T11:00:00Z",
+    "type": "expense",
+    "categoryId": "7",
+    "accountId": "1",
+    "amount": 1000.0,
+    "currencyId": "1",
+    "description": "Monthly rent payment",
+    "groupId": "3",
+    "createdAt": "2024-03-10T11:00:00Z",
+    "tags": ["house", "rent"]
+  }
+]

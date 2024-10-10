@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "name": "Food & Drinks",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "name": "Transportation",
+    "createdAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": "3",
+    "name": "House",
+    "createdAt": "2024-03-01T00:00:00Z"
+  }
+]
