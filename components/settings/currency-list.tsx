@@ -11,7 +11,7 @@ import {
   addCurrency,
   updateCurrency,
   deleteCurrency,
-} from "@/app/actions/currency-action";
+} from "@/app/actions/currency-actions";
 
 interface Currency {
   id: string;

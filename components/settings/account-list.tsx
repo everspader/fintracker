@@ -13,30 +13,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Checkbox } from "../ui/checkbox";
 import {
   getAccounts,
   addAccount,
   updateAccount,
   deleteAccount,
-} from "@/app/actions/account-action";
-
-interface Account {
-  id: string;
-  name: string;
-  type: "credit" | "debit" | "investment";
-}
+  Account,
+} from "@/app/actions/account-actions";
+import { getCurrencies, Currency } from "@/app/actions/currency-actions";
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
-  const [newAccount, setNewAccount] = useState({
+  const [newAccount, setNewAccount] = useState<Omit<Account, "id">>({
     name: "",
-    type: "debit" as const,
+    type: "debit",
+    currencyIds: [],
   });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAccounts();
+    fetchCurrencies();
   }, []);
 
   const fetchAccounts = async () => {
@@ -53,11 +53,25 @@ export default function AccountList() {
     }
   };
 
+  const fetchCurrencies = async () => {
+    try {
+      const fetchedCurrencies = await getCurrencies();
+      setCurrencies(fetchedCurrencies);
+    } catch (error) {
+      console.error("Failed to fetch currencies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load currencies. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddAccount = async () => {
     try {
       const addedAccount = await addAccount(newAccount);
       setAccounts([...accounts, addedAccount]);
-      setNewAccount({ name: "", type: "debit" });
+      setNewAccount({ name: "", type: "debit", currencyIds: [] });
       toast({
         title: "Success",
         description: "Account added successfully.",
@@ -113,6 +127,24 @@ export default function AccountList() {
     }
   };
 
+  const handleCurrencyChange = (
+    accountId: string,
+    currencyId: string,
+    checked: boolean
+  ) => {
+    setAccounts(
+      accounts.map((account) => {
+        if (account.id === accountId) {
+          const updatedCurrencyIds = checked
+            ? [...account.currencyIds, currencyId]
+            : account.currencyIds.filter((id) => id !== currencyId);
+          return { ...account, currencyIds: updatedCurrencyIds };
+        }
+        return account;
+      })
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -143,6 +175,29 @@ export default function AccountList() {
                 <SelectItem value="investment">Investment</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex flex-col space-y-2">
+              {currencies.map((currency) => (
+                <div key={currency.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`new-account-currency-${currency.id}`}
+                    checked={newAccount.currencyIds.includes(currency.id)}
+                    onCheckedChange={(checked) => {
+                      setNewAccount({
+                        ...newAccount,
+                        currencyIds: checked
+                          ? [...newAccount.currencyIds, currency.id]
+                          : newAccount.currencyIds.filter(
+                              (id) => id !== currency.id
+                            ),
+                      });
+                    }}
+                  />
+                  <label htmlFor={`new-account-currency-${currency.id}`}>
+                    {currency.code}
+                  </label>
+                </div>
+              ))}
+            </div>
             <Button onClick={handleAddAccount}>
               <Plus className="mr-2 h-4 w-4" /> Add Account
             </Button>
@@ -182,6 +237,31 @@ export default function AccountList() {
                       <SelectItem value="investment">Investment</SelectItem>
                     </SelectContent>
                   </Select>
+                  <div className="flex flex-col space-y-2">
+                    {currencies.map((currency) => (
+                      <div
+                        key={currency.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`account-${account.id}-currency-${currency.id}`}
+                          checked={account.currencyIds.includes(currency.id)}
+                          onCheckedChange={(checked) =>
+                            handleCurrencyChange(
+                              account.id,
+                              currency.id,
+                              checked as boolean
+                            )
+                          }
+                        />
+                        <label
+                          htmlFor={`account-${account.id}-currency-${currency.id}`}
+                        >
+                          {currency.code}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                   <Button onClick={() => handleUpdateAccount(account)}>
                     <Save className="mr-2 h-4 w-4" /> Save
                   </Button>
@@ -195,7 +275,10 @@ export default function AccountList() {
               ) : (
                 <>
                   <span className="flex-grow">
-                    {account.name} ({account.type})
+                    {account.name} ({account.type}) - Currencies:{" "}
+                    {account.currencyIds
+                      .map((id) => currencies.find((c) => c.id === id)?.code)
+                      .join(", ")}
                   </span>
                   <Button
                     variant="ghost"
