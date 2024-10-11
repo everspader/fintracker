@@ -13,16 +13,7 @@ import {
   deleteCurrency,
   Currency,
 } from "@/app/actions/currency-actions";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export default function CurrencyList() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -101,6 +92,7 @@ export default function CurrencyList() {
           description: "Currency deleted successfully.",
         });
       } catch (error) {
+        console.error("Failed to delete currency:", error);
         toast({
           title: "Error",
           description: "Failed to delete currency. Please try again.",
@@ -206,23 +198,13 @@ export default function CurrencyList() {
           ))}
         </div>
       </CardContent>
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              currency.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Currency"
+        description="Are you sure you want to delete this currency? This action cannot be undone."
+      />
     </Card>
   );
 }

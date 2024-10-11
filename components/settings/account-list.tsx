@@ -21,16 +21,7 @@ import {
   Account,
 } from "@/app/actions/account-actions";
 import { getCurrencies, Currency } from "@/app/actions/currency-actions";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { MultiSelect } from "../ui/multi-select";
 
 export default function AccountList() {
@@ -130,7 +121,7 @@ export default function AccountList() {
     }
   };
 
-  const handleDeleteAccount = async (id: string) => {
+  const handleDeleteAccount = (id: string) => {
     setAccountToDelete(id);
     setDeleteConfirmOpen(true);
   };
@@ -145,6 +136,7 @@ export default function AccountList() {
           description: "Account deleted successfully.",
         });
       } catch (error) {
+        console.log(error);
         toast({
           title: "Error",
           description: "Failed to delete account. Please try again.",
@@ -295,23 +287,13 @@ export default function AccountList() {
           ))}
         </div>
       </CardContent>
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Account"
+        description="Are you sure you want to delete this account? This action cannot be undone."
+      />
     </Card>
   );
 }

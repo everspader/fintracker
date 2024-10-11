@@ -95,9 +95,9 @@ export async function updateAccount(account: Account): Promise<Account> {
 
 export async function deleteAccount(id: string): Promise<void> {
   try {
-    await db
-      .delete(accountCurrencies)
-      .where(eq(accountCurrencies.accountId, id));
+    // await db
+    //   .delete(accountCurrencies)
+    //   .where(eq(accountCurrencies.accountId, id));
     await db.delete(accounts).where(eq(accounts.id, id));
   } catch (error) {
     console.error("Failed to delete account:", error);
