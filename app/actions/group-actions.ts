@@ -4,10 +4,6 @@ import { db } from "@/db/db";
 import { groups, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-type GroupResult =
-  | { success: true; groupId: string }
-  | { success: false; error: string };
-
 export async function getGroups() {
   const groupsData = await db.select().from(groups);
   const groupsWithCategories = await Promise.all(
@@ -28,13 +24,13 @@ export async function getGroups() {
 export async function createGroup(
   groupName: string,
   categoryNames: string[]
-): Promise<GroupResult> {
+): Promise<void> {
   try {
     if (!groupName.trim()) {
-      return { success: false, error: "Group name cannot be empty" };
+      throw new Error("Group name cannot be empty");
     }
     if (categoryNames.length === 0) {
-      return { success: false, error: "At least one category must be added" };
+      throw new Error("At least one category must be added");
     }
 
     const existingGroup = await db
@@ -44,7 +40,7 @@ export async function createGroup(
       .limit(1);
 
     if (existingGroup.length > 0) {
-      return { success: false, error: "A group with this name already exists" };
+      throw new Error("Group with the same name already exists");
     }
 
     const [insertedGroup] = await db
@@ -57,11 +53,9 @@ export async function createGroup(
       .values(
         categoryNames.map((name) => ({ name, groupId: insertedGroup.id }))
       );
-
-    return { success: true, groupId: insertedGroup.id };
   } catch (error) {
     console.error("Failed to create group:", error);
-    return { success: false, error: "Failed to create group" };
+    throw new Error("Failed to create group: " + error);
   }
 }
 
@@ -99,13 +93,12 @@ export async function updateGroup(
   }
 }
 
-export async function deleteGroup(groupId: string): Promise<GroupResult> {
+export async function deleteGroup(groupId: string): Promise<void> {
   try {
     await db.delete(categories).where(eq(categories.groupId, groupId));
     await db.delete(groups).where(eq(groups.id, groupId));
-    return { success: true, groupId };
   } catch (error) {
     console.error("Failed to delete group:", error);
-    return { success: false, error: "Failed to delete group" };
+    throw new Error("Failed to delete group: " + error);
   }
 }

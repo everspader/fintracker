@@ -23,7 +23,10 @@ interface Group {
 export default function GroupList() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
-  const [newGroup, setNewGroup] = useState({ name: "", categories: [] });
+  const [newGroup, setNewGroup] = useState<{
+    name: string;
+    categories: string[];
+  }>({ name: "", categories: [] });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const { toast } = useToast();
@@ -48,17 +51,14 @@ export default function GroupList() {
 
   const handleAddGroup = async () => {
     try {
-      const result = await createGroup(newGroup.name, newGroup.categories);
-      if (result.success) {
-        await fetchGroups();
-        setNewGroup({ name: "", categories: [] });
-        toast({
-          title: "Success",
-          description: "Group added successfully.",
-        });
-      } else {
-        throw new Error(result.error);
-      }
+      await createGroup(newGroup.name, newGroup.categories);
+
+      await fetchGroups();
+      setNewGroup({ name: "", categories: [] });
+      toast({
+        title: "Success",
+        description: "Group added successfully.",
+      });
     } catch (error) {
       console.error("Failed to add group:", error);
       toast({
@@ -71,17 +71,14 @@ export default function GroupList() {
 
   const handleUpdateGroup = async (group: Group) => {
     try {
-      const result = await updateGroup(group.id, group.name, group.categories);
-      if (result.success) {
-        await fetchGroups();
-        setEditingGroup(null);
-        toast({
-          title: "Success",
-          description: "Group updated successfully.",
-        });
-      } else {
-        throw new Error(result.error);
-      }
+      await updateGroup(group.id, group.name, group.categories);
+
+      await fetchGroups();
+      setEditingGroup(null);
+      toast({
+        title: "Success",
+        description: "Group updated successfully.",
+      });
     } catch (error) {
       console.error("Failed to update group:", error);
       toast({
