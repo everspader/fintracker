@@ -6,34 +6,18 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  getCurrencies,
+  addCurrency,
+  updateCurrency,
+  deleteCurrency,
+} from "@/app/actions/currency-action";
 
 interface Currency {
   id: string;
   code: string;
   name: string;
 }
-
-// Mock functions for currency actions (replace with actual API calls)
-const getCurrencies = async (): Promise<Currency[]> => {
-  // Implement API call to fetch currencies
-  return [];
-};
-
-const addCurrency = async (
-  currency: Omit<Currency, "id">
-): Promise<Currency> => {
-  // Implement API call to add currency
-  return { id: "new-id", ...currency };
-};
-
-const updateCurrency = async (currency: Currency): Promise<Currency> => {
-  // Implement API call to update currency
-  return currency;
-};
-
-const deleteCurrency = async (id: string): Promise<void> => {
-  // Implement API call to delete currency
-};
 
 export default function CurrencyList() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);

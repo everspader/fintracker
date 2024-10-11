@@ -13,32 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import {
+  getAccounts,
+  addAccount,
+  updateAccount,
+  deleteAccount,
+} from "@/app/actions/account-action";
 
 interface Account {
   id: string;
   name: string;
   type: "credit" | "debit" | "investment";
 }
-
-// Mock functions for account actions (replace with actual API calls)
-const getAccounts = async (): Promise<Account[]> => {
-  // Implement API call to fetch accounts
-  return [];
-};
-
-const addAccount = async (account: Omit<Account, "id">): Promise<Account> => {
-  // Implement API call to add account
-  return { id: "new-id", ...account };
-};
-
-const updateAccount = async (account: Account): Promise<Account> => {
-  // Implement API call to update account
-  return account;
-};
-
-const deleteAccount = async (id: string): Promise<void> => {
-  // Implement API call to delete account
-};
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
