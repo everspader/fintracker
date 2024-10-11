@@ -12,7 +12,16 @@ import {
   updateGroup,
   deleteGroup,
 } from "@/app/actions/group-actions";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 interface Group {
   id: string;
   name: string;
@@ -23,6 +32,8 @@ export default function GroupList() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [newGroup, setNewGroup] = useState({ name: "", categories: [] });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -90,20 +101,20 @@ export default function GroupList() {
   };
 
   const handleDeleteGroup = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this group?")) {
+    setGroupToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (groupToDelete) {
       try {
-        const result = await deleteGroup(id);
-        if (result.success) {
-          await fetchGroups();
-          toast({
-            title: "Success",
-            description: "Group deleted successfully.",
-          });
-        } else {
-          throw new Error(result.error);
-        }
+        await deleteGroup(groupToDelete);
+        setGroups(groups.filter((g) => g.id !== groupToDelete));
+        toast({
+          title: "Success",
+          description: "Group deleted successfully.",
+        });
       } catch (error) {
-        console.error("Failed to delete group:", error);
         toast({
           title: "Error",
           description: "Failed to delete group. Please try again.",
@@ -111,6 +122,8 @@ export default function GroupList() {
         });
       }
     }
+    setDeleteConfirmOpen(false);
+    setGroupToDelete(null);
   };
 
   return (
@@ -213,6 +226,23 @@ export default function GroupList() {
           ))}
         </div>
       </CardContent>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

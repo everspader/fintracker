@@ -11,18 +11,26 @@ import {
   addCurrency,
   updateCurrency,
   deleteCurrency,
+  Currency,
 } from "@/app/actions/currency-actions";
-
-interface Currency {
-  id: string;
-  code: string;
-  name: string;
-}
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CurrencyList() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [editingCurrency, setEditingCurrency] = useState<string | null>(null);
   const [newCurrency, setNewCurrency] = useState({ code: "", name: "" });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [currencyToDelete, setCurrencyToDelete] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,7 +42,6 @@ export default function CurrencyList() {
       const fetchedCurrencies = await getCurrencies();
       setCurrencies(fetchedCurrencies);
     } catch (error) {
-      console.error("Failed to fetch currencies:", error);
       toast({
         title: "Error",
         description: "Failed to load currencies. Please try again.",
@@ -44,6 +51,7 @@ export default function CurrencyList() {
   };
 
   const handleAddCurrency = async () => {
+    setErrors({});
     try {
       const addedCurrency = await addCurrency(newCurrency);
       setCurrencies([...currencies, addedCurrency]);
@@ -53,16 +61,14 @@ export default function CurrencyList() {
         description: "Currency added successfully.",
       });
     } catch (error) {
-      console.error("Failed to add currency:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add currency. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error) {
+        setErrors({ add: error.message });
+      }
     }
   };
 
   const handleUpdateCurrency = async (currency: Currency) => {
+    setErrors({});
     try {
       const updatedCurrency = await updateCurrency(currency);
       setCurrencies(
@@ -74,26 +80,27 @@ export default function CurrencyList() {
         description: "Currency updated successfully.",
       });
     } catch (error) {
-      console.error("Failed to update currency:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update currency. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error) {
+        setErrors({ [currency.id]: error.message });
+      }
     }
   };
 
   const handleDeleteCurrency = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this currency?")) {
+    setCurrencyToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (currencyToDelete) {
       try {
-        await deleteCurrency(id);
-        setCurrencies(currencies.filter((c) => c.id !== id));
+        await deleteCurrency(currencyToDelete);
+        setCurrencies(currencies.filter((c) => c.id !== currencyToDelete));
         toast({
           title: "Success",
           description: "Currency deleted successfully.",
         });
       } catch (error) {
-        console.error("Failed to delete currency:", error);
         toast({
           title: "Error",
           description: "Failed to delete currency. Please try again.",
@@ -101,6 +108,8 @@ export default function CurrencyList() {
         });
       }
     }
+    setDeleteConfirmOpen(false);
+    setCurrencyToDelete(null);
   };
 
   return (
@@ -110,25 +119,31 @@ export default function CurrencyList() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Currency code"
-              value={newCurrency.code}
-              onChange={(e) =>
-                setNewCurrency({ ...newCurrency, code: e.target.value })
-              }
-            />
-            <Input
-              placeholder="Currency name"
-              value={newCurrency.name}
-              onChange={(e) =>
-                setNewCurrency({ ...newCurrency, name: e.target.value })
-              }
-            />
+          <div className="flex items-end space-x-2">
+            <div className="flex-1">
+              <Input
+                placeholder="Currency code"
+                value={newCurrency.code}
+                onChange={(e) =>
+                  setNewCurrency({ ...newCurrency, code: e.target.value })
+                }
+                className={errors.add ? "border-red-500" : ""}
+              />
+            </div>
+            <div className="flex-1">
+              <Input
+                placeholder="Currency name"
+                value={newCurrency.name}
+                onChange={(e) =>
+                  setNewCurrency({ ...newCurrency, name: e.target.value })
+                }
+              />
+            </div>
             <Button onClick={handleAddCurrency}>
               <Plus className="mr-2 h-4 w-4" /> Add Currency
             </Button>
           </div>
+          {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
           {currencies.map((currency) => (
             <div key={currency.id} className="flex items-center space-x-2">
               {editingCurrency === currency.id ? (
@@ -144,6 +159,7 @@ export default function CurrencyList() {
                         )
                       )
                     }
+                    className={errors[currency.id] ? "border-red-500" : ""}
                   />
                   <Input
                     value={currency.name}
@@ -190,6 +206,23 @@ export default function CurrencyList() {
           ))}
         </div>
       </CardContent>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              currency.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

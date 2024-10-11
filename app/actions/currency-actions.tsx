@@ -23,28 +23,62 @@ export async function addCurrency(
   currency: Omit<Currency, "id">
 ): Promise<Currency> {
   try {
+    if (!currency.code.trim()) {
+      throw new Error("Currency code cannot be empty");
+    }
+
+    const upperCaseCode = currency.code.toUpperCase();
+    const existingCurrency = await db
+      .select()
+      .from(currencies)
+      .where(eq(currencies.code, upperCaseCode));
+
+    if (existingCurrency.length > 0) {
+      throw new Error(`Currency with code ${upperCaseCode} already exists`);
+    }
+
     const [insertedCurrency] = await db
       .insert(currencies)
-      .values(currency)
+      .values({
+        ...currency,
+        code: upperCaseCode,
+      })
       .returning();
     return insertedCurrency;
   } catch (error) {
     console.error("Failed to add currency:", error);
-    throw new Error("Failed to add currency");
+    throw error;
   }
 }
 
 export async function updateCurrency(currency: Currency): Promise<Currency> {
   try {
+    if (!currency.code.trim()) {
+      throw new Error("Currency code cannot be empty");
+    }
+
+    const upperCaseCode = currency.code.toUpperCase();
+    const existingCurrency = await db
+      .select()
+      .from(currencies)
+      .where(eq(currencies.code, upperCaseCode));
+
+    if (existingCurrency.length > 0 && existingCurrency[0].id !== currency.id) {
+      throw new Error(`Currency with code ${upperCaseCode} already exists`);
+    }
+
     const [updatedCurrency] = await db
       .update(currencies)
-      .set(currency)
+      .set({
+        ...currency,
+        code: upperCaseCode,
+      })
       .where(eq(currencies.id, currency.id))
       .returning();
     return updatedCurrency;
   } catch (error) {
     console.error("Failed to update currency:", error);
-    throw new Error("Failed to update currency");
+    throw error;
   }
 }
 

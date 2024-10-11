@@ -32,6 +32,13 @@ export async function addAccount(
   account: Omit<Account, "id">
 ): Promise<Account> {
   try {
+    if (!account.name.trim()) {
+      throw new Error("Account name cannot be empty");
+    }
+    if (account.currencyIds.length === 0) {
+      throw new Error("At least one currency must be selected");
+    }
+
     const [insertedAccount] = await db
       .insert(accounts)
       .values({
@@ -50,12 +57,19 @@ export async function addAccount(
     return { ...insertedAccount, currencyIds: account.currencyIds };
   } catch (error) {
     console.error("Failed to add account:", error);
-    throw new Error("Failed to add account");
+    throw error;
   }
 }
 
 export async function updateAccount(account: Account): Promise<Account> {
   try {
+    if (!account.name.trim()) {
+      throw new Error("Account name cannot be empty");
+    }
+    if (account.currencyIds.length === 0) {
+      throw new Error("At least one currency must be selected");
+    }
+
     const [updatedAccount] = await db
       .update(accounts)
       .set({ name: account.name, type: account.type })
@@ -75,7 +89,7 @@ export async function updateAccount(account: Account): Promise<Account> {
     return { ...updatedAccount, currencyIds: account.currencyIds };
   } catch (error) {
     console.error("Failed to update account:", error);
-    throw new Error("Failed to update account");
+    throw error;
   }
 }
 

@@ -30,6 +30,13 @@ export async function createGroup(
   categoryNames: string[]
 ): Promise<GroupResult> {
   try {
+    if (!groupName.trim()) {
+      return { success: false, error: "Group name cannot be empty" };
+    }
+    if (categoryNames.length === 0) {
+      return { success: false, error: "At least one category must be added" };
+    }
+
     const existingGroup = await db
       .select()
       .from(groups)
@@ -45,13 +52,11 @@ export async function createGroup(
       .values({ name: groupName })
       .returning();
 
-    if (categoryNames.length > 0) {
-      await db
-        .insert(categories)
-        .values(
-          categoryNames.map((name) => ({ name, groupId: insertedGroup.id }))
-        );
-    }
+    await db
+      .insert(categories)
+      .values(
+        categoryNames.map((name) => ({ name, groupId: insertedGroup.id }))
+      );
 
     return { success: true, groupId: insertedGroup.id };
   } catch (error) {
@@ -66,6 +71,13 @@ export async function updateGroup(
   categoryNames: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!groupName.trim()) {
+      return { success: false, error: "Group name cannot be empty" };
+    }
+    if (categoryNames.length === 0) {
+      return { success: false, error: "At least one category must be added" };
+    }
+
     // Update group name
     await db
       .update(groups)
@@ -76,11 +88,9 @@ export async function updateGroup(
     await db.delete(categories).where(eq(categories.groupId, groupId));
 
     // Insert new categories
-    if (categoryNames.length > 0) {
-      await db
-        .insert(categories)
-        .values(categoryNames.map((name) => ({ name, groupId })));
-    }
+    await db
+      .insert(categories)
+      .values(categoryNames.map((name) => ({ name, groupId })));
 
     return { success: true };
   } catch (error) {

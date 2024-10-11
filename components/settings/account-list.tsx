@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Checkbox } from "../ui/checkbox";
 import {
   getAccounts,
   addAccount,
@@ -22,6 +21,17 @@ import {
   Account,
 } from "@/app/actions/account-actions";
 import { getCurrencies, Currency } from "@/app/actions/currency-actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MultiSelect } from "../ui/multi-select";
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -32,6 +42,9 @@ export default function AccountList() {
     type: "debit",
     currencyIds: [],
   });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,7 +57,6 @@ export default function AccountList() {
       const fetchedAccounts = await getAccounts();
       setAccounts(fetchedAccounts);
     } catch (error) {
-      console.error("Failed to fetch accounts:", error);
       toast({
         title: "Error",
         description: "Failed to load accounts. Please try again.",
@@ -58,7 +70,6 @@ export default function AccountList() {
       const fetchedCurrencies = await getCurrencies();
       setCurrencies(fetchedCurrencies);
     } catch (error) {
-      console.error("Failed to fetch currencies:", error);
       toast({
         title: "Error",
         description: "Failed to load currencies. Please try again.",
@@ -68,7 +79,16 @@ export default function AccountList() {
   };
 
   const handleAddAccount = async () => {
+    setErrors({});
     try {
+      if (!newAccount.name.trim()) {
+        setErrors({ name: "Account name cannot be empty" });
+        return;
+      }
+      if (newAccount.currencyIds.length === 0) {
+        setErrors({ currencies: "Please select at least one currency" });
+        return;
+      }
       const addedAccount = await addAccount(newAccount);
       setAccounts([...accounts, addedAccount]);
       setNewAccount({ name: "", type: "debit", currencyIds: [] });
@@ -77,17 +97,23 @@ export default function AccountList() {
         description: "Account added successfully.",
       });
     } catch (error) {
-      console.error("Failed to add account:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add account. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error) {
+        setErrors({ add: error.message });
+      }
     }
   };
 
   const handleUpdateAccount = async (account: Account) => {
+    setErrors({});
     try {
+      if (!account.name.trim()) {
+        setErrors({ [account.id]: "Account name cannot be empty" });
+        return;
+      }
+      if (account.currencyIds.length === 0) {
+        setErrors({ [account.id]: "Please select at least one currency" });
+        return;
+      }
       const updatedAccount = await updateAccount(account);
       setAccounts(
         accounts.map((a) => (a.id === account.id ? updatedAccount : a))
@@ -98,26 +124,27 @@ export default function AccountList() {
         description: "Account updated successfully.",
       });
     } catch (error) {
-      console.error("Failed to update account:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update account. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error) {
+        setErrors({ [account.id]: error.message });
+      }
     }
   };
 
   const handleDeleteAccount = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
+    setAccountToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (accountToDelete) {
       try {
-        await deleteAccount(id);
-        setAccounts(accounts.filter((a) => a.id !== id));
+        await deleteAccount(accountToDelete);
+        setAccounts(accounts.filter((a) => a.id !== accountToDelete));
         toast({
           title: "Success",
           description: "Account deleted successfully.",
         });
       } catch (error) {
-        console.error("Failed to delete account:", error);
         toast({
           title: "Error",
           description: "Failed to delete account. Please try again.",
@@ -125,24 +152,8 @@ export default function AccountList() {
         });
       }
     }
-  };
-
-  const handleCurrencyChange = (
-    accountId: string,
-    currencyId: string,
-    checked: boolean
-  ) => {
-    setAccounts(
-      accounts.map((account) => {
-        if (account.id === accountId) {
-          const updatedCurrencyIds = checked
-            ? [...account.currencyIds, currencyId]
-            : account.currencyIds.filter((id) => id !== currencyId);
-          return { ...account, currencyIds: updatedCurrencyIds };
-        }
-        return account;
-      })
-    );
+    setDeleteConfirmOpen(false);
+    setAccountToDelete(null);
   };
 
   return (
@@ -159,6 +170,7 @@ export default function AccountList() {
               onChange={(e) =>
                 setNewAccount({ ...newAccount, name: e.target.value })
               }
+              className={errors.name ? "border-red-500" : ""}
             />
             <Select
               value={newAccount.type}
@@ -175,33 +187,24 @@ export default function AccountList() {
                 <SelectItem value="investment">Investment</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex flex-col space-y-2">
-              {currencies.map((currency) => (
-                <div key={currency.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`new-account-currency-${currency.id}`}
-                    checked={newAccount.currencyIds.includes(currency.id)}
-                    onCheckedChange={(checked) => {
-                      setNewAccount({
-                        ...newAccount,
-                        currencyIds: checked
-                          ? [...newAccount.currencyIds, currency.id]
-                          : newAccount.currencyIds.filter(
-                              (id) => id !== currency.id
-                            ),
-                      });
-                    }}
-                  />
-                  <label htmlFor={`new-account-currency-${currency.id}`}>
-                    {currency.code}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <MultiSelect
+              options={currencies.map((c) => ({ label: c.code, value: c.id }))}
+              selected={newAccount.currencyIds}
+              onChange={(selected) =>
+                setNewAccount({ ...newAccount, currencyIds: selected })
+              }
+              placeholder="Select currencies"
+              className={errors.currencies ? "border-red-500" : ""}
+            />
             <Button onClick={handleAddAccount}>
               <Plus className="mr-2 h-4 w-4" /> Add Account
             </Button>
           </div>
+          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+          {errors.currencies && (
+            <p className="text-red-500 text-sm">{errors.currencies}</p>
+          )}
+          {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
           {accounts.map((account) => (
             <div key={account.id} className="flex items-center space-x-2">
               {editingAccount === account.id ? (
@@ -217,6 +220,7 @@ export default function AccountList() {
                         )
                       )
                     }
+                    className={errors[account.id] ? "border-red-500" : ""}
                   />
                   <Select
                     value={account.type}
@@ -237,31 +241,24 @@ export default function AccountList() {
                       <SelectItem value="investment">Investment</SelectItem>
                     </SelectContent>
                   </Select>
-                  <div className="flex flex-col space-y-2">
-                    {currencies.map((currency) => (
-                      <div
-                        key={currency.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`account-${account.id}-currency-${currency.id}`}
-                          checked={account.currencyIds.includes(currency.id)}
-                          onCheckedChange={(checked) =>
-                            handleCurrencyChange(
-                              account.id,
-                              currency.id,
-                              checked as boolean
-                            )
-                          }
-                        />
-                        <label
-                          htmlFor={`account-${account.id}-currency-${currency.id}`}
-                        >
-                          {currency.code}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+                  <MultiSelect
+                    options={currencies.map((c) => ({
+                      label: c.code,
+                      value: c.id,
+                    }))}
+                    selected={account.currencyIds}
+                    onChange={(selected) =>
+                      setAccounts(
+                        accounts.map((a) =>
+                          a.id === account.id
+                            ? { ...a, currencyIds: selected }
+                            : a
+                        )
+                      )
+                    }
+                    placeholder="Select currencies"
+                    className={errors[account.id] ? "border-red-500" : ""}
+                  />
                   <Button onClick={() => handleUpdateAccount(account)}>
                     <Save className="mr-2 h-4 w-4" /> Save
                   </Button>
@@ -298,6 +295,23 @@ export default function AccountList() {
           ))}
         </div>
       </CardContent>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
