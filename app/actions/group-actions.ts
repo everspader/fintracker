@@ -40,22 +40,20 @@ export async function createGroup(
       return { success: false, error: "A group with this name already exists" };
     }
 
-    return await db.transaction(async (tx) => {
-      const [insertedGroup] = await tx
-        .insert(groups)
-        .values({ name: groupName })
-        .returning();
+    const [insertedGroup] = await db
+      .insert(groups)
+      .values({ name: groupName })
+      .returning();
 
-      if (categoryNames.length > 0) {
-        await tx
-          .insert(categories)
-          .values(
-            categoryNames.map((name) => ({ name, groupId: insertedGroup.id }))
-          );
-      }
+    if (categoryNames.length > 0) {
+      await db
+        .insert(categories)
+        .values(
+          categoryNames.map((name) => ({ name, groupId: insertedGroup.id }))
+        );
+    }
 
-      return { success: true, groupId: insertedGroup.id };
-    });
+    return { success: true, groupId: insertedGroup.id };
   } catch (error) {
     console.error("Failed to create group:", error);
     return { success: false, error: "Failed to create group" };
@@ -68,23 +66,21 @@ export async function updateGroup(
   categoryNames: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await db.transaction(async (tx) => {
-      // Update group name
-      await tx
-        .update(groups)
-        .set({ name: groupName })
-        .where(eq(groups.id, groupId));
+    // Update group name
+    await db
+      .update(groups)
+      .set({ name: groupName })
+      .where(eq(groups.id, groupId));
 
-      // Delete existing categories
-      await tx.delete(categories).where(eq(categories.groupId, groupId));
+    // Delete existing categories
+    await db.delete(categories).where(eq(categories.groupId, groupId));
 
-      // Insert new categories
-      if (categoryNames.length > 0) {
-        await tx
-          .insert(categories)
-          .values(categoryNames.map((name) => ({ name, groupId })));
-      }
-    });
+    // Insert new categories
+    if (categoryNames.length > 0) {
+      await db
+        .insert(categories)
+        .values(categoryNames.map((name) => ({ name, groupId })));
+    }
 
     return { success: true };
   } catch (error) {
@@ -95,10 +91,8 @@ export async function updateGroup(
 
 export async function deleteGroup(groupId: string): Promise<GroupResult> {
   try {
-    await db.transaction(async (tx) => {
-      await tx.delete(categories).where(eq(categories.groupId, groupId));
-      await tx.delete(groups).where(eq(groups.id, groupId));
-    });
+    await db.delete(categories).where(eq(categories.groupId, groupId));
+    await db.delete(groups).where(eq(groups.id, groupId));
     return { success: true, groupId };
   } catch (error) {
     console.error("Failed to delete group:", error);
