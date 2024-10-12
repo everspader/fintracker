@@ -54,16 +54,10 @@ export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
   entryDate: timestamp("entry_date").notNull().defaultNow(),
   type: transactionTypeEnum("type").notNull(),
-  categoryId: uuid("category_id")
-    .notNull()
-    .references(() => categories.id),
-  accountId: uuid("account_id")
-    .notNull()
-    .references(() => accounts.id),
+  categoryId: uuid("category_id").references(() => categories.id),
+  accountId: uuid("account_id").references(() => accounts.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  currencyId: uuid("currency_id")
-    .notNull()
-    .references(() => currencies.id),
+  currencyId: uuid("currency_id").references(() => currencies.id),
   description: text("description"),
   groupId: uuid("group_id")
     .notNull()

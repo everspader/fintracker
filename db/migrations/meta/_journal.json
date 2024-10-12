@@ -29,6 +29,13 @@
       "when": 1728586035740,
       "tag": "0003_stormy_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1728739155667,
+      "tag": "0004_naive_the_initiative",
+      "breakpoints": true
     }
   ]
 }

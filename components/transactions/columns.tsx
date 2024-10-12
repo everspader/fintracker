@@ -85,10 +85,17 @@ export const columns: ColumnDef<Transaction>[] = [
     ),
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("amount"));
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: row.original.currency,
-      }).format(amount);
+      const currency = row.original.currency;
+
+      let formatted: string;
+      if (currency) {
+        formatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: currency,
+        }).format(amount);
+      } else {
+        formatted = amount.toFixed(2);
+      }
 
       return <div className="font-medium">{formatted}</div>;
     },
