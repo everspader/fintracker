@@ -95,7 +95,7 @@ export default function CurrencyList() {
         console.error("Failed to delete currency:", error);
         toast({
           title: "Error",
-          description: "Failed to delete currency. Please try again.",
+          description: `Failed to delete currency. ${error}`,
           variant: "destructive",
         });
       }
