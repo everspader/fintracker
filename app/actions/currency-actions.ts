@@ -15,7 +15,7 @@ export async function getCurrencies(): Promise<Currency[]> {
     return await db.select().from(currencies);
   } catch (error) {
     console.error("Failed to fetch currencies:", error);
-    throw new Error("Failed to fetch currencies");
+    throw new Error(`Failed to get currency ${error}`);
   }
 }
 
@@ -47,7 +47,7 @@ export async function addCurrency(
     return insertedCurrency;
   } catch (error) {
     console.error("Failed to add currency:", error);
-    throw error;
+    throw new Error(`Failed to add currency ${error}`);
   }
 }
 
@@ -78,7 +78,7 @@ export async function updateCurrency(currency: Currency): Promise<Currency> {
     return updatedCurrency;
   } catch (error) {
     console.error("Failed to update currency:", error);
-    throw error;
+    throw new Error(`Failed to update currency ${error}`);
   }
 }
 
@@ -87,6 +87,6 @@ export async function deleteCurrency(id: string): Promise<void> {
     await db.delete(currencies).where(eq(currencies.id, id));
   } catch (error) {
     console.error("Failed to delete currency:", error);
-    throw new Error("Failed to delete currency");
+    throw new Error(`Failed to delete currency ${error}`);
   }
 }

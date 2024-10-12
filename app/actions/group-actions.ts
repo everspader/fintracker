@@ -63,13 +63,13 @@ export async function updateGroup(
   groupId: string,
   groupName: string,
   categoryNames: string[]
-): Promise<{ success: boolean; error?: string }> {
+): Promise<void> {
   try {
     if (!groupName.trim()) {
-      return { success: false, error: "Group name cannot be empty" };
+      throw new Error("Group name cannot be empty");
     }
     if (categoryNames.length === 0) {
-      return { success: false, error: "At least one category must be added" };
+      throw new Error("At least one category must be added");
     }
 
     // Update group name
@@ -85,11 +85,9 @@ export async function updateGroup(
     await db
       .insert(categories)
       .values(categoryNames.map((name) => ({ name, groupId })));
-
-    return { success: true };
   } catch (error) {
     console.error("Failed to update group:", error);
-    return { success: false, error: "Failed to update group" };
+    throw new Error(`Failed to update group ${error}`);
   }
 }
 
