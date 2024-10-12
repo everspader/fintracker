@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/db";
-import { accounts, accountCurrencies } from "@/db/schema";
+import { accounts, accountCurrencies, transactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export type Account = {
@@ -24,7 +24,7 @@ export async function getAccounts(): Promise<Account[]> {
     }));
   } catch (error) {
     console.error("Failed to fetch accounts:", error);
-    throw new Error(`Failed to get account ${error}`);
+    throw new Error(`Failed to fetch accounts: ${error}`);
   }
 }
 
@@ -57,7 +57,7 @@ export async function addAccount(
     return { ...insertedAccount, currencyIds: account.currencyIds };
   } catch (error) {
     console.error("Failed to add account:", error);
-    throw new Error(`Failed to add account ${error}`);
+    throw new Error(`Failed to add account: ${error}`);
   }
 }
 
@@ -89,7 +89,7 @@ export async function updateAccount(account: Account): Promise<Account> {
     return { ...updatedAccount, currencyIds: account.currencyIds };
   } catch (error) {
     console.error("Failed to update account:", error);
-    throw new Error(`Failed to update account ${error}`);
+    throw new Error(`Failed to update account: ${error}`);
   }
 }
 
@@ -98,9 +98,13 @@ export async function deleteAccount(id: string): Promise<void> {
     await db
       .delete(accountCurrencies)
       .where(eq(accountCurrencies.accountId, id));
+    await db
+      .update(transactions)
+      .set({ accountId: null })
+      .where(eq(transactions.accountId, id));
     await db.delete(accounts).where(eq(accounts.id, id));
   } catch (error) {
     console.error("Failed to delete account:", error);
-    throw new Error(`Failed to delete account ${error}`);
+    throw new Error(`Failed to delete account: ${error}`);
   }
 }
