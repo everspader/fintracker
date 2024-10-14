@@ -20,7 +20,6 @@ import {
 } from "@/app/actions/account-actions";
 import { getCurrencies, Currency } from "@/app/actions/currency-actions";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { MultiSelect } from "../ui/multi-select";
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -29,7 +28,7 @@ export default function AccountList() {
   const [newAccount, setNewAccount] = useState<Omit<Account, "id">>({
     name: "",
     type: "debit",
-    currencyIds: [], // Ensure this is initialized as an empty array
+    currencyIds: [],
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
@@ -57,7 +56,6 @@ export default function AccountList() {
   const fetchCurrencies = async () => {
     try {
       const fetchedCurrencies = await getCurrencies();
-      console.log(fetchedCurrencies);
       setCurrencies(fetchedCurrencies);
     } catch (error) {
       toast({
@@ -76,7 +74,7 @@ export default function AccountList() {
         return;
       }
       if (newAccount.currencyIds.length === 0) {
-        setErrors({ currencies: "Please select at least one currency" });
+        setErrors({ currencies: "Please select a currency" });
         return;
       }
       const addedAccount = await addAccount(newAccount);
@@ -101,7 +99,7 @@ export default function AccountList() {
         return;
       }
       if (account.currencyIds.length === 0) {
-        setErrors({ [account.id]: "Please select at least one currency" });
+        setErrors({ [account.id]: "Please select a currency" });
         return;
       }
       const updatedAccount = await updateAccount(account);
@@ -178,20 +176,23 @@ export default function AccountList() {
                 <SelectItem value="investment">Investment</SelectItem>
               </SelectContent>
             </Select>
-            {currencies.length > 0 && (
-              <MultiSelect
-                options={currencies.map((c) => ({
-                  label: c.code,
-                  value: c.id,
-                }))}
-                selected={newAccount.currencyIds}
-                onChange={(selected) =>
-                  setNewAccount({ ...newAccount, currencyIds: selected })
-                }
-                placeholder="Select currencies"
-                className={errors.currencies ? "border-red-500" : ""}
-              />
-            )}
+            <Select
+              value={newAccount.currencyIds[0] || ""}
+              onValueChange={(value) =>
+                setNewAccount({ ...newAccount, currencyIds: [value] })
+              }
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies.map((currency) => (
+                  <SelectItem key={currency.id} value={currency.id}>
+                    {currency.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button onClick={handleAddAccount}>
               <Plus className="mr-2 h-4 w-4" /> Add Account
             </Button>
@@ -237,26 +238,29 @@ export default function AccountList() {
                       <SelectItem value="investment">Investment</SelectItem>
                     </SelectContent>
                   </Select>
-                  {currencies.length > 0 && (
-                    <MultiSelect
-                      options={currencies.map((c) => ({
-                        label: c.code,
-                        value: c.id,
-                      }))}
-                      selected={account.currencyIds || []} // Ensure this is never undefined
-                      onChange={(selected) =>
-                        setAccounts(
-                          accounts.map((a) =>
-                            a.id === account.id
-                              ? { ...a, currencyIds: selected }
-                              : a
-                          )
+                  <Select
+                    value={account.currencyIds[0] || ""}
+                    onValueChange={(value) =>
+                      setAccounts(
+                        accounts.map((a) =>
+                          a.id === account.id
+                            ? { ...a, currencyIds: [value] }
+                            : a
                         )
-                      }
-                      placeholder="Select currencies"
-                      className={errors[account.id] ? "border-red-500" : ""}
-                    />
-                  )}
+                      )
+                    }
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem key={currency.id} value={currency.id}>
+                          {currency.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button onClick={() => handleUpdateAccount(account)}>
                     <Save className="mr-2 h-4 w-4" /> Save
                   </Button>
@@ -270,10 +274,11 @@ export default function AccountList() {
               ) : (
                 <>
                   <span className="flex-grow">
-                    {account.name} ({account.type}) - Currencies:{" "}
-                    {account.currencyIds
-                      .map((id) => currencies.find((c) => c.id === id)?.code)
-                      .join(", ")}
+                    {account.name} ({account.type}) - Currency:{" "}
+                    {
+                      currencies.find((c) => c.id === account.currencyIds[0])
+                        ?.code
+                    }
                   </span>
                   <Button
                     variant="ghost"
