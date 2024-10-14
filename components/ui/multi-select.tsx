@@ -13,15 +13,15 @@ type Option = {
 
 type MultiSelectProps = {
   options: Option[];
-  selected: string[];
+  selected: string[] | undefined;
   onChange: (selected: string[]) => void;
   placeholder?: string;
   className?: string;
 };
 
 export function MultiSelect({
-  options,
-  selected,
+  options = [],
+  selected = [],
   onChange,
   placeholder = "Select options",
   className,
@@ -30,28 +30,35 @@ export function MultiSelect({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
 
-  const handleUnselect = (option: Option) => {
-    onChange(selected.filter((s) => s !== option.value));
-  };
+  const handleUnselect = React.useCallback(
+    (option: Option) => {
+      onChange((selected || []).filter((s) => s !== option.value));
+    },
+    [onChange, selected]
+  );
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const input = inputRef.current;
-    if (input) {
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (input.value === "") {
-          const newSelected = [...selected];
-          newSelected.pop();
-          onChange(newSelected);
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const input = inputRef.current;
+      if (input) {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          if (input.value === "") {
+            const newSelected = [...(selected || [])];
+            newSelected.pop();
+            onChange(newSelected);
+          }
+        }
+        if (e.key === "Escape") {
+          input.blur();
         }
       }
-      if (e.key === "Escape") {
-        input.blur();
-      }
-    }
-  };
+    },
+    [onChange, selected]
+  );
 
-  const selectables = options.filter(
-    (option) => !selected.includes(option.value)
+  const selectables = React.useMemo(
+    () => options.filter((option) => !(selected || []).includes(option.value)),
+    [options, selected]
   );
 
   React.useEffect(() => {
@@ -80,7 +87,7 @@ export function MultiSelect({
         onClick={() => setOpen(true)}
       >
         <div className="flex gap-1 flex-wrap">
-          {selected.map((selectedValue) => {
+          {(selected || []).map((selectedValue) => {
             const option = options.find((o) => o.value === selectedValue);
             if (!option) return null;
             return (
@@ -128,7 +135,7 @@ export function MultiSelect({
                     }}
                     onSelect={() => {
                       setInputValue("");
-                      onChange([...selected, option.value]);
+                      onChange([...(selected || []), option.value]);
                     }}
                     className={"cursor-pointer"}
                   >
