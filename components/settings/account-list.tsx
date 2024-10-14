@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CurrencySelector } from "./currency-selector";
 import {
   getAccounts,
   addAccount,
@@ -153,46 +154,46 @@ export default function AccountList() {
     setAccountToDelete(null);
   };
 
-  const CurrencySelector = ({
-    selectedCurrencies,
-    onChange,
-  }: {
-    selectedCurrencies: string[];
-    onChange: (selected: string[]) => void;
-  }) => {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline">
-            {selectedCurrencies.length > 0
-              ? `${selectedCurrencies.length} currency${
-                  selectedCurrencies.length > 1 ? "ies" : ""
-                } selected`
-              : "Select currencies"}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          {currencies.map((currency) => (
-            <DropdownMenuCheckboxItem
-              key={currency.id}
-              checked={selectedCurrencies.includes(currency.id)}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  onChange([...selectedCurrencies, currency.id]);
-                } else {
-                  onChange(
-                    selectedCurrencies.filter((id) => id !== currency.id)
-                  );
-                }
-              }}
-            >
-              {currency.code}
-            </DropdownMenuCheckboxItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
+  // const CurrencySelector = ({
+  //   selectedCurrencies,
+  //   onChange,
+  // }: {
+  //   selectedCurrencies: string[];
+  //   onChange: (selected: string[]) => void;
+  // }) => {
+  //   return (
+  //     <DropdownMenu>
+  //       <DropdownMenuTrigger asChild>
+  //         <Button variant="outline">
+  //           {selectedCurrencies.length > 0
+  //             ? `${selectedCurrencies.length} currency${
+  //                 selectedCurrencies.length > 1 ? "ies" : ""
+  //               } selected`
+  //             : "Select currencies"}
+  //         </Button>
+  //       </DropdownMenuTrigger>
+  //       <DropdownMenuContent className="w-56">
+  //         {currencies.map((currency) => (
+  //           <DropdownMenuCheckboxItem
+  //             key={currency.id}
+  //             checked={selectedCurrencies.includes(currency.id)}
+  //             onCheckedChange={(checked) => {
+  //               if (checked) {
+  //                 onChange([...selectedCurrencies, currency.id]);
+  //               } else {
+  //                 onChange(
+  //                   selectedCurrencies.filter((id) => id !== currency.id)
+  //                 );
+  //               }
+  //             }}
+  //           >
+  //             {currency.code}
+  //           </DropdownMenuCheckboxItem>
+  //         ))}
+  //       </DropdownMenuContent>
+  //     </DropdownMenu>
+  //   );
+  // };
 
   return (
     <Card>
@@ -226,6 +227,7 @@ export default function AccountList() {
               </SelectContent>
             </Select>
             <CurrencySelector
+              currencies={currencies}
               selectedCurrencies={newAccount.currencyIds}
               onChange={(selected) =>
                 setNewAccount({ ...newAccount, currencyIds: selected })
@@ -277,6 +279,7 @@ export default function AccountList() {
                     </SelectContent>
                   </Select>
                   <CurrencySelector
+                    currencies={currencies}
                     selectedCurrencies={account.currencyIds}
                     onChange={(selected) =>
                       setAccounts(
