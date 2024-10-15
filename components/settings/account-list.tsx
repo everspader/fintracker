@@ -1,25 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { CurrencySelector } from "./currency-selector";
+import { CurrencySelect } from "./currency-select";
+import { AccountTypeSelect } from "@/components/settings/account-type-select";
 import {
   getAccounts,
   addAccount,
@@ -29,6 +15,7 @@ import {
 } from "@/app/actions/account-actions";
 import { getCurrencies, Currency } from "@/app/actions/currency-actions";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { AccountType } from "@/db/schema";
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -154,47 +141,6 @@ export default function AccountList() {
     setAccountToDelete(null);
   };
 
-  // const CurrencySelector = ({
-  //   selectedCurrencies,
-  //   onChange,
-  // }: {
-  //   selectedCurrencies: string[];
-  //   onChange: (selected: string[]) => void;
-  // }) => {
-  //   return (
-  //     <DropdownMenu>
-  //       <DropdownMenuTrigger asChild>
-  //         <Button variant="outline">
-  //           {selectedCurrencies.length > 0
-  //             ? `${selectedCurrencies.length} currency${
-  //                 selectedCurrencies.length > 1 ? "ies" : ""
-  //               } selected`
-  //             : "Select currencies"}
-  //         </Button>
-  //       </DropdownMenuTrigger>
-  //       <DropdownMenuContent className="w-56">
-  //         {currencies.map((currency) => (
-  //           <DropdownMenuCheckboxItem
-  //             key={currency.id}
-  //             checked={selectedCurrencies.includes(currency.id)}
-  //             onCheckedChange={(checked) => {
-  //               if (checked) {
-  //                 onChange([...selectedCurrencies, currency.id]);
-  //               } else {
-  //                 onChange(
-  //                   selectedCurrencies.filter((id) => id !== currency.id)
-  //                 );
-  //               }
-  //             }}
-  //           >
-  //             {currency.code}
-  //           </DropdownMenuCheckboxItem>
-  //         ))}
-  //       </DropdownMenuContent>
-  //     </DropdownMenu>
-  //   );
-  // };
-
   return (
     <Card>
       <CardHeader>
@@ -202,7 +148,7 @@ export default function AccountList() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <Input
               placeholder="New account name"
               value={newAccount.name}
@@ -211,29 +157,23 @@ export default function AccountList() {
               }
               className={errors.name ? "border-red-500" : ""}
             />
-            <Select
-              value={newAccount.type}
-              onValueChange={(value: "credit" | "debit" | "investment") =>
+            <AccountTypeSelect
+              value={newAccount.type as AccountType}
+              onValueChange={(value: AccountType) =>
                 setNewAccount({ ...newAccount, type: value })
               }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Account type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="credit">Credit</SelectItem>
-                <SelectItem value="debit">Debit</SelectItem>
-                <SelectItem value="investment">Investment</SelectItem>
-              </SelectContent>
-            </Select>
-            <CurrencySelector
-              currencies={currencies}
-              selectedCurrencies={newAccount.currencyIds}
-              onChange={(selected) =>
-                setNewAccount({ ...newAccount, currencyIds: selected })
-              }
+              className="w-full"
             />
-            <Button onClick={handleAddAccount}>
+            <div className="w-full">
+              <CurrencySelect
+                currencies={currencies}
+                selectedCurrencies={newAccount.currencyIds}
+                onChange={(selected) =>
+                  setNewAccount({ ...newAccount, currencyIds: selected })
+                }
+              />
+            </div>
+            <Button onClick={handleAddAccount} className="w-full">
               <Plus className="mr-2 h-4 w-4" /> Add Account
             </Button>
           </div>
@@ -243,7 +183,10 @@ export default function AccountList() {
           )}
           {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
           {accounts.map((account) => (
-            <div key={account.id} className="flex items-center space-x-2">
+            <div
+              key={account.id}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center mb-4"
+            >
               {editingAccount === account.id ? (
                 <>
                   <Input
@@ -259,68 +202,70 @@ export default function AccountList() {
                     }
                     className={errors[account.id] ? "border-red-500" : ""}
                   />
-                  <Select
-                    value={account.type}
-                    onValueChange={(value: "credit" | "debit" | "investment") =>
+                  <AccountTypeSelect
+                    value={account.type as AccountType}
+                    onValueChange={(value: AccountType) =>
                       setAccounts(
                         accounts.map((a) =>
                           a.id === account.id ? { ...a, type: value } : a
                         )
                       )
                     }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Account type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="credit">Credit</SelectItem>
-                      <SelectItem value="debit">Debit</SelectItem>
-                      <SelectItem value="investment">Investment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <CurrencySelector
-                    currencies={currencies}
-                    selectedCurrencies={account.currencyIds}
-                    onChange={(selected) =>
-                      setAccounts(
-                        accounts.map((a) =>
-                          a.id === account.id
-                            ? { ...a, currencyIds: selected }
-                            : a
-                        )
-                      )
-                    }
+                    className="w-full"
                   />
-                  <Button onClick={() => handleUpdateAccount(account)}>
-                    <Save className="mr-2 h-4 w-4" /> Save
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setEditingAccount(null)}
-                  >
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                  </Button>
+                  <div className="w-full">
+                    <CurrencySelect
+                      currencies={currencies}
+                      selectedCurrencies={account.currencyIds}
+                      onChange={(selected) =>
+                        setAccounts(
+                          accounts.map((a) =>
+                            a.id === account.id
+                              ? { ...a, currencyIds: selected }
+                              : a
+                          )
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => handleUpdateAccount(account)}
+                      className="flex-1"
+                    >
+                      <Save className="mr-2 h-4 w-4" /> Save
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setEditingAccount(null)}
+                      className="flex-1"
+                    >
+                      <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <span className="flex-grow">
+                  <span className="sm:col-span-3">
                     {account.name} ({account.type}) - Currencies:{" "}
                     {account.currencyIds
                       .map((id) => currencies.find((c) => c.id === id)?.code)
                       .join(", ")}
                   </span>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setEditingAccount(account.id)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleDeleteAccount(account.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setEditingAccount(account.id)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleDeleteAccount(account.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </>
               )}
             </div>

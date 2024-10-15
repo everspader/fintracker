@@ -20,6 +20,8 @@ export const accountTypeEnum = pgEnum("account_type", [
   "investment",
 ]);
 
+export type AccountType = (typeof accountTypeEnum.enumValues)[number];
+
 // Helper Tables
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().defaultRandom(),

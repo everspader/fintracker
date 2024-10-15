@@ -56,8 +56,15 @@ export async function addAccount(
 
     return { ...insertedAccount, currencyIds: account.currencyIds };
   } catch (error) {
-    console.error("Failed to add account:", error);
-    throw new Error(`Failed to add account: ${error}`);
+    let errorMessage = "Failed to add account:";
+    if (
+      error instanceof Error &&
+      error.message.includes("accounts_name_unique")
+    ) {
+      errorMessage += " Account name must be unique";
+    }
+    console.error(errorMessage, error);
+    throw new Error(errorMessage);
   }
 }
 

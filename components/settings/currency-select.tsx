@@ -7,18 +7,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Currency } from "@/app/actions/currency-actions";
+import { ChevronDown } from "lucide-react";
 
-interface CurrencySelectorProps {
+interface CurrencySelectProps {
   currencies: Currency[];
   selectedCurrencies: string[];
   onChange: (selected: string[]) => void;
 }
 
-export function CurrencySelector({
+export function CurrencySelect({
   currencies,
   selectedCurrencies,
   onChange,
-}: CurrencySelectorProps) {
+}: CurrencySelectProps) {
   const [open, setOpen] = useState(false);
 
   const handleCheckedChange = useCallback(
@@ -35,16 +36,19 @@ export function CurrencySelector({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          {selectedCurrencies.length > 0
-            ? `${selectedCurrencies.length} currenc${
-                selectedCurrencies.length > 1 ? "ies" : "y"
-              } selected`
-            : "Select currencies"}
+        <Button variant="outline" className="w-full justify-between">
+          <span className="truncate">
+            {selectedCurrencies.length > 0
+              ? `${selectedCurrencies.length} currenc${
+                  selectedCurrencies.length > 1 ? "ies" : "y"
+                } selected`
+              : "Select currencies"}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56"
+        className="w-[200px]"
         onCloseAutoFocus={(event) => event.preventDefault()}
       >
         {currencies.map((currency) => (
