@@ -17,9 +17,18 @@ import { getCurrencies, Currency } from "@/app/actions/currency-actions";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AccountType } from "@/db/schema";
 
-export default function AccountList() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
+interface AccountListProps {
+  accounts: Account[];
+  currencies: Currency[];
+  onDataChange: () => Promise<void>;
+}
+export default function AccountList({
+  accounts: initialAccounts,
+  currencies: initialCurrencies,
+  onDataChange,
+}: AccountListProps) {
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [currencies, setCurrencies] = useState<Currency[]>(initialCurrencies);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [newAccount, setNewAccount] = useState<Omit<Account, "id">>({
     name: "",
@@ -85,6 +94,7 @@ export default function AccountList() {
         setErrors({ add: error.message });
       }
     }
+    await onDataChange();
   };
 
   const handleUpdateAccount = async (account: Account) => {
@@ -112,11 +122,13 @@ export default function AccountList() {
         setErrors({ [account.id]: error.message });
       }
     }
+    await onDataChange();
   };
 
-  const handleDeleteAccount = (id: string) => {
+  const handleDeleteAccount = async (id: string) => {
     setAccountToDelete(id);
     setDeleteConfirmOpen(true);
+    await onDataChange();
   };
 
   const confirmDelete = async () => {
@@ -148,7 +160,7 @@ export default function AccountList() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
             <Input
               placeholder="New account name"
               value={newAccount.name}

@@ -11,17 +11,20 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
+  Group,
 } from "@/app/actions/group-actions";
 import { DeleteConfirmDialog } from "../ui/delete-confirm-dialog";
 
-interface Group {
-  id: string;
-  name: string;
-  categories: string[];
+interface GroupListProps {
+  groups: Group[];
+  onDataChange: () => Promise<void>;
 }
 
-export default function GroupList() {
-  const [groups, setGroups] = useState<Group[]>([]);
+export default function GroupList({
+  groups: initialGroups,
+  onDataChange,
+}: GroupListProps) {
+  const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [newGroup, setNewGroup] = useState<{
     name: string;
@@ -29,6 +32,7 @@ export default function GroupList() {
   }>({ name: "", categories: [] });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,6 +71,7 @@ export default function GroupList() {
         variant: "destructive",
       });
     }
+    await onDataChange();
   };
 
   const handleUpdateGroup = async (group: Group) => {
@@ -87,11 +92,13 @@ export default function GroupList() {
         variant: "destructive",
       });
     }
+    await onDataChange();
   };
 
   const handleDeleteGroup = async (id: string) => {
     setGroupToDelete(id);
     setDeleteConfirmOpen(true);
+    await onDataChange();
   };
 
   const confirmDelete = async () => {

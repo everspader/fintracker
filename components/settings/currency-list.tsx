@@ -15,8 +15,16 @@ import {
 } from "@/app/actions/currency-actions";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
-export default function CurrencyList() {
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
+interface CurrencyListProps {
+  currencies: Currency[];
+  onDataChange: () => Promise<void>;
+}
+
+export default function CurrencyList({
+  currencies: initialCurrencies,
+  onDataChange,
+}: CurrencyListProps) {
+  const [currencies, setCurrencies] = useState<Currency[]>(initialCurrencies);
   const [editingCurrency, setEditingCurrency] = useState<string | null>(null);
   const [newCurrency, setNewCurrency] = useState({ code: "", name: "" });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -56,6 +64,7 @@ export default function CurrencyList() {
         setErrors({ add: error.message });
       }
     }
+    await onDataChange();
   };
 
   const handleUpdateCurrency = async (currency: Currency) => {
@@ -75,6 +84,7 @@ export default function CurrencyList() {
         setErrors({ [currency.id]: error.message });
       }
     }
+    await onDataChange();
   };
 
   const handleDeleteCurrency = async (id: string) => {
@@ -102,6 +112,7 @@ export default function CurrencyList() {
     }
     setDeleteConfirmOpen(false);
     setCurrencyToDelete(null);
+    await onDataChange();
   };
 
   return (

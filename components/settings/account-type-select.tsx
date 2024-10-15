@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { accountTypeEnum, AccountType } from "@/db/schema";
 
-interface AccountTypeSelectorProps {
+interface AccountTypeSelectProps {
   value: AccountType;
   onValueChange: (value: AccountType) => void;
   className?: string;
@@ -17,7 +17,7 @@ export function AccountTypeSelect({
   value,
   onValueChange,
   className,
-}: AccountTypeSelectorProps) {
+}: AccountTypeSelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className={className}>

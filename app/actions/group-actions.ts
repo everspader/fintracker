@@ -4,6 +4,12 @@ import { db } from "@/db/db";
 import { groups, categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export interface Group {
+  id: string;
+  name: string;
+  categories: string[];
+}
+
 export async function getGroups() {
   const groupsData = await db.select().from(groups);
   const groupsWithCategories = await Promise.all(
