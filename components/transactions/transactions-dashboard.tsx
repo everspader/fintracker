@@ -95,7 +95,6 @@ export default function TransactionDashboard({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Transactions</h2>
         <div className="space-x-2">
           <Button
             onClick={handleDeleteSelected}
