@@ -22,16 +22,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
-export default function TransactionDashboard() {
+interface TransactionDashboardProps {
+  initialTransactions: Transaction[];
+}
+
+export default function TransactionDashboard({
+  initialTransactions,
+}: TransactionDashboardProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] =
+    useState<Transaction[]>(initialTransactions);
   const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchTransactions = useCallback(async () => {
-    setIsLoading(true);
     try {
       const fetchedTransactions = await getTransactions();
       setTransactions(fetchedTransactions);
@@ -42,13 +47,14 @@ export default function TransactionDashboard() {
         description: "Failed to fetch transactions. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
-    fetchTransactions();
+    // Refresh data every 5 minutes
+    const intervalId = setInterval(fetchTransactions, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
   }, [fetchTransactions]);
 
   const handleDeleteSelected = () => {
@@ -103,15 +109,11 @@ export default function TransactionDashboard() {
           </Button>
         </div>
       </div>
-      {isLoading ? (
-        <div>Loading transactions...</div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={transactions}
-          onRowsSelected={handleRowsSelected}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={transactions}
+        onRowsSelected={handleRowsSelected}
+      />
       <AddTransactionDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
