@@ -11,42 +11,6 @@ import {
 import { Transaction } from "@/components/transactions/columns";
 import { eq, inArray, sql } from "drizzle-orm";
 
-export async function getGroups() {
-  try {
-    return await db.select().from(groups);
-  } catch (error) {
-    console.error("Failed to fetch groups:", error);
-    throw new Error("Failed to fetch groups");
-  }
-}
-
-export async function getCategories() {
-  try {
-    return await db.select().from(categories);
-  } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    throw new Error("Failed to fetch categories");
-  }
-}
-
-export async function getAccounts() {
-  try {
-    return await db.select().from(accounts);
-  } catch (error) {
-    console.error("Failed to fetch accounts:", error);
-    throw new Error("Failed to fetch accounts");
-  }
-}
-
-export async function getCurrencies() {
-  try {
-    return await db.select().from(currencies);
-  } catch (error) {
-    console.error("Failed to fetch currencies:", error);
-    throw new Error("Failed to fetch currencies");
-  }
-}
-
 export async function getTransactions(): Promise<Transaction[]> {
   try {
     const result = await db

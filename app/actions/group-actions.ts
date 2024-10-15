@@ -106,3 +106,12 @@ export async function deleteGroup(groupId: string): Promise<void> {
     throw new Error("Failed to delete group: " + error);
   }
 }
+
+export async function getCategories() {
+  try {
+    return await db.select().from(categories);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    throw new Error("Failed to fetch categories");
+  }
+}

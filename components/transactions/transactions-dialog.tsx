@@ -31,13 +31,11 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
-import {
-  getGroups,
-  getCategories,
-  getAccounts,
-  getCurrencies,
-  addTransaction,
-} from "@/app/actions/transactions-actions";
+import { addTransaction } from "@/app/actions/transactions-actions";
+import { getAccounts } from "@/app/actions/account-actions";
+import { getCategories } from "@/app/actions/group-actions";
+import { getCurrencies } from "@/app/actions/currency-actions";
+import { getGroups } from "@/app/actions/group-actions";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -53,7 +51,12 @@ const formSchema = z.object({
 
 type Group = { id: string; name: string };
 type Category = { id: string; name: string; groupId: string };
-type Account = { id: string; name: string; type: string };
+type Account = {
+  id: string;
+  name: string;
+  type: string;
+  currencyIds: string[];
+};
 type Currency = { id: string; code: string; name: string };
 
 export default function AddTransactionDialog({
@@ -70,6 +73,7 @@ export default function AddTransactionDialog({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [filteredCurrencies, setFilteredCurrencies] = useState<Currency[]>([]);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -97,6 +101,8 @@ export default function AddTransactionDialog({
       amount: 0,
       description: "",
     });
+    setFilteredCategories([]);
+    setFilteredCurrencies([]);
   };
 
   useEffect(() => {
@@ -130,7 +136,23 @@ export default function AddTransactionDialog({
     setFilteredCategories(
       categories.filter((category) => category.groupId === selectedGroup)
     );
-  }, [form.watch("groupId"), categories]);
+    form.setValue("categoryId", "");
+  }, [form.watch("groupId"), categories, form]);
+
+  useEffect(() => {
+    const selectedAccount = form.watch("accountId");
+    const account = accounts.find((acc) => acc.id === selectedAccount);
+    if (account) {
+      setFilteredCurrencies(
+        currencies.filter((currency) =>
+          account.currencyIds.includes(currency.id)
+        )
+      );
+    } else {
+      setFilteredCurrencies([]);
+    }
+    form.setValue("currencyId", "");
+  }, [form.watch("accountId"), accounts, currencies, form]);
 
   async function onSubmit(
     values: z.infer<typeof formSchema>,
@@ -259,7 +281,11 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!form.watch("groupId")}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
@@ -307,16 +333,20 @@ export default function AddTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!form.watch("accountId")}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a currency" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {currencies.map((currency) => (
+                      {filteredCurrencies.map((currency) => (
                         <SelectItem key={currency.id} value={currency.id}>
-                          {currency.code} - {currency.name}
+                          {currency.code}
                         </SelectItem>
                       ))}
                     </SelectContent>
