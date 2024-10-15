@@ -1,19 +1,16 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
-  getCurrencies,
   addCurrency,
   updateCurrency,
   deleteCurrency,
   Currency,
 } from "@/app/actions/currency-actions";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CurrencyListProps {
   currencies: Currency[];
@@ -21,10 +18,9 @@ interface CurrencyListProps {
 }
 
 export default function CurrencyList({
-  currencies: initialCurrencies,
+  currencies,
   onDataChange,
 }: CurrencyListProps) {
-  const [currencies, setCurrencies] = useState<Currency[]>(initialCurrencies);
   const [editingCurrency, setEditingCurrency] = useState<string | null>(null);
   const [newCurrency, setNewCurrency] = useState({ code: "", name: "" });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -32,62 +28,57 @@ export default function CurrencyList({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchCurrencies();
-  }, []);
-
-  const fetchCurrencies = async () => {
-    try {
-      const fetchedCurrencies = await getCurrencies();
-      setCurrencies(fetchedCurrencies);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load currencies. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleAddCurrency = async () => {
     setErrors({});
     try {
-      const addedCurrency = await addCurrency(newCurrency);
-      setCurrencies([...currencies, addedCurrency]);
+      if (!newCurrency.code.trim()) {
+        setErrors({ code: "Currency code cannot be empty" });
+        return;
+      }
+      if (!newCurrency.name.trim()) {
+        setErrors({ name: "Currency name cannot be empty" });
+        return;
+      }
+      await addCurrency(newCurrency);
       setNewCurrency({ code: "", name: "" });
       toast({
         title: "Success",
         description: "Currency added successfully.",
       });
+      await onDataChange();
     } catch (error) {
       if (error instanceof Error) {
         setErrors({ add: error.message });
       }
     }
-    await onDataChange();
   };
 
   const handleUpdateCurrency = async (currency: Currency) => {
     setErrors({});
     try {
-      const updatedCurrency = await updateCurrency(currency);
-      setCurrencies(
-        currencies.map((c) => (c.id === currency.id ? updatedCurrency : c))
-      );
+      if (!currency.code.trim()) {
+        setErrors({ [currency.id]: "Currency code cannot be empty" });
+        return;
+      }
+      if (!currency.name.trim()) {
+        setErrors({ [currency.id]: "Currency name cannot be empty" });
+        return;
+      }
+      await updateCurrency(currency);
       setEditingCurrency(null);
       toast({
         title: "Success",
         description: "Currency updated successfully.",
       });
+      await onDataChange();
     } catch (error) {
       if (error instanceof Error) {
         setErrors({ [currency.id]: error.message });
       }
     }
-    await onDataChange();
   };
 
-  const handleDeleteCurrency = async (id: string) => {
+  const handleDeleteCurrency = (id: string) => {
     setCurrencyToDelete(id);
     setDeleteConfirmOpen(true);
   };
@@ -96,110 +87,108 @@ export default function CurrencyList({
     if (currencyToDelete) {
       try {
         await deleteCurrency(currencyToDelete);
-        setCurrencies(currencies.filter((c) => c.id !== currencyToDelete));
         toast({
           title: "Success",
           description: "Currency deleted successfully.",
         });
+        await onDataChange();
       } catch (error) {
         console.error("Failed to delete currency:", error);
         toast({
           title: "Error",
-          description: `Failed to delete currency. ${error}`,
+          description: "Failed to delete currency. Please try again.",
           variant: "destructive",
         });
       }
     }
     setDeleteConfirmOpen(false);
     setCurrencyToDelete(null);
-    await onDataChange();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Currencies</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-end space-x-2">
-            <div className="flex-1">
-              <Input
-                placeholder="Currency code"
-                value={newCurrency.code}
-                onChange={(e) =>
-                  setNewCurrency({ ...newCurrency, code: e.target.value })
-                }
-                className={errors.add ? "border-red-500" : ""}
-              />
-            </div>
-            <div className="flex-1">
-              <Input
-                placeholder="Currency name"
-                value={newCurrency.name}
-                onChange={(e) =>
-                  setNewCurrency({ ...newCurrency, name: e.target.value })
-                }
-              />
-            </div>
-            <Button onClick={handleAddCurrency}>
-              <Plus className="mr-2 h-4 w-4" /> Add Currency
-            </Button>
-          </div>
-          {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
+    <div className="space-y-4">
+      <div className="grid grid-cols-12 gap-4">
+        <Input
+          placeholder="Currency code"
+          value={newCurrency.code}
+          onChange={(e) =>
+            setNewCurrency({ ...newCurrency, code: e.target.value })
+          }
+          className={`col-span-3 ${errors.code ? "border-red-500" : ""}`}
+        />
+        <Input
+          placeholder="Currency name"
+          value={newCurrency.name}
+          onChange={(e) =>
+            setNewCurrency({ ...newCurrency, name: e.target.value })
+          }
+          className={`col-span-7 ${errors.name ? "border-red-500" : ""}`}
+        />
+        <Button onClick={handleAddCurrency} className="col-span-2">
+          <Plus className="mr-2 h-4 w-4" /> Add Currency
+        </Button>
+      </div>
+      {errors.code && <p className="text-red-500 text-sm">{errors.code}</p>}
+      {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+      {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
+      <ScrollArea className="h-[400px] w-full">
+        <div className="space-y-2">
           {currencies.map((currency) => (
-            <div key={currency.id} className="flex items-center space-x-2">
+            <div
+              key={currency.id}
+              className="grid grid-cols-12 items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+            >
               {editingCurrency === currency.id ? (
                 <>
                   <Input
                     value={currency.code}
-                    onChange={(e) =>
-                      setCurrencies(
-                        currencies.map((c) =>
-                          c.id === currency.id
-                            ? { ...c, code: e.target.value }
-                            : c
-                        )
-                      )
-                    }
-                    className={errors[currency.id] ? "border-red-500" : ""}
+                    onChange={(e) => (currency.code = e.target.value)}
+                    className={`col-span-3 ${
+                      errors[currency.id] ? "border-red-500" : ""
+                    }`}
                   />
                   <Input
                     value={currency.name}
-                    onChange={(e) =>
-                      setCurrencies(
-                        currencies.map((c) =>
-                          c.id === currency.id
-                            ? { ...c, name: e.target.value }
-                            : c
-                        )
-                      )
-                    }
+                    onChange={(e) => (currency.name = e.target.value)}
+                    className={`col-span-7 ${
+                      errors[currency.id] ? "border-red-500" : ""
+                    }`}
                   />
-                  <Button onClick={() => handleUpdateCurrency(currency)}>
-                    <Save className="mr-2 h-4 w-4" /> Save
+                  <Button
+                    onClick={() => handleUpdateCurrency(currency)}
+                    size="sm"
+                    className="col-span-1"
+                  >
+                    <Save className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => setEditingCurrency(null)}
+                    size="sm"
+                    className="col-span-1"
                   >
-                    <X className="mr-2 h-4 w-4" /> Cancel
+                    <X className="h-4 w-4" />
                   </Button>
                 </>
               ) : (
                 <>
-                  <span className="flex-grow">
-                    {currency.code} - {currency.name}
+                  <span className="font-medium col-span-3 pl-4">
+                    {currency.code}
                   </span>
+                  <span className="col-span-7">{currency.name}</span>
                   <Button
                     variant="ghost"
+                    size="sm"
                     onClick={() => setEditingCurrency(currency.id)}
+                    className="col-span-1"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
+                    size="sm"
                     onClick={() => handleDeleteCurrency(currency.id)}
+                    className="col-span-1"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -208,7 +197,7 @@ export default function CurrencyList({
             </div>
           ))}
         </div>
-      </CardContent>
+      </ScrollArea>
       <DeleteConfirmDialog
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
@@ -216,6 +205,6 @@ export default function CurrencyList({
         title="Delete Currency"
         description="Are you sure you want to delete this currency? This action cannot be undone."
       />
-    </Card>
+    </div>
   );
 }

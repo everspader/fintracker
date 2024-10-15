@@ -10,7 +10,7 @@ export interface Group {
   categories: string[];
 }
 
-export async function getGroups() {
+export async function getGroups(): Promise<Group[]> {
   const groupsData = await db.select().from(groups);
   const groupsWithCategories = await Promise.all(
     groupsData.map(async (group) => {
@@ -27,7 +27,7 @@ export async function getGroups() {
   return groupsWithCategories;
 }
 
-export async function createGroup(
+export async function addGroup(
   groupName: string,
   categoryNames: string[]
 ): Promise<void> {

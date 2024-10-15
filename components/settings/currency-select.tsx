@@ -13,12 +13,14 @@ interface CurrencySelectProps {
   currencies: Currency[];
   selectedCurrencies: string[];
   onChange: (selected: string[]) => void;
+  className?: string; // Add this line to accept className prop
 }
 
 export function CurrencySelect({
   currencies,
   selectedCurrencies,
   onChange,
+  className = "", // Add default value for className
 }: CurrencySelectProps) {
   const [open, setOpen] = useState(false);
 
@@ -36,7 +38,10 @@ export function CurrencySelect({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full justify-between">
+        <Button
+          variant="outline"
+          className={`w-full justify-between ${className}`}
+        >
           <span className="truncate">
             {selectedCurrencies.length > 0
               ? `${selectedCurrencies.length} currenc${
