@@ -7,9 +7,19 @@ import {
   addGroup,
   updateGroup,
   deleteGroup,
+  getGroupTransactionCount,
   Group,
 } from "@/app/actions/group-actions";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -23,7 +33,10 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
   const [newGroup, setNewGroup] = useState({ name: "", categories: "" });
   const [updatedGroup, setUpdatedGroup] = useState<Group | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
+  const [groupToDelete, setGroupToDelete] = useState<{
+    id: string;
+    transactionCount: number;
+  } | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
@@ -94,20 +107,24 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
     }
   };
 
-  const handleDeleteGroup = (id: string) => {
-    setGroupToDelete(id);
+  const handleDeleteGroup = async (id: string) => {
+    const transactionCount = await getGroupTransactionCount(id);
+    setGroupToDelete({ id, transactionCount });
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (action: "cancel" | "setNull" | "deleteAll") => {
     if (groupToDelete) {
+      console.log(action);
       try {
-        await deleteGroup(groupToDelete);
-        toast({
-          title: "Success",
-          description: "Group deleted successfully.",
-        });
-        await onDataChange();
+        if (action !== "cancel") {
+          await deleteGroup(groupToDelete.id, action);
+          toast({
+            title: "Success",
+            description: "Group deleted successfully.",
+          });
+          await onDataChange();
+        }
       } catch (error) {
         console.error(error);
         toast({
@@ -233,13 +250,43 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
           ))}
         </div>
       </ScrollArea>
-      <DeleteConfirmDialog
-        isOpen={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-        onConfirm={confirmDelete}
-        title="Delete Group"
-        description="Are you sure you want to delete this group? This action cannot be undone."
-      />
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              {groupToDelete && groupToDelete.transactionCount > 0 ? (
+                <>
+                  This group has {groupToDelete.transactionCount} transaction
+                  {groupToDelete.transactionCount > 1 ? "s" : ""} associated
+                  with it. What would you like to do?
+                </>
+              ) : (
+                "Are you sure you want to delete this group? This action cannot be undone."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => confirmDelete("cancel")}>
+              Cancel
+            </AlertDialogCancel>
+            {groupToDelete && groupToDelete.transactionCount > 0 ? (
+              <>
+                <AlertDialogAction onClick={() => confirmDelete("setNull")}>
+                  Set to Null
+                </AlertDialogAction>
+                <AlertDialogAction onClick={() => confirmDelete("deleteAll")}>
+                  Delete All
+                </AlertDialogAction>
+              </>
+            ) : (
+              <AlertDialogAction onClick={() => confirmDelete("deleteAll")}>
+                Delete
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

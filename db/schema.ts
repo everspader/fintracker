@@ -61,9 +61,7 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currencyId: uuid("currency_id").references(() => currencies.id),
   description: text("description"),
-  groupId: uuid("group_id")
-    .notNull()
-    .references(() => groups.id),
+  groupId: uuid("group_id").references(() => groups.id), // Remove .notNull()
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

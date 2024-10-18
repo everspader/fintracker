@@ -2,7 +2,7 @@
 
 import { db } from "@/db/db";
 import { groups, categories, transactions } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql, and, isNull } from "drizzle-orm";
 
 export interface Group {
   id: string;
@@ -128,13 +128,53 @@ export async function updateGroup(
   }
 }
 
-export async function deleteGroup(groupId: string): Promise<void> {
+export async function getGroupTransactionCount(
+  groupId: string
+): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(transactions)
+    .where(eq(transactions.groupId, groupId));
+  return result[0].count;
+}
+
+export async function deleteGroup(
+  groupId: string,
+  action: "cancel" | "setNull" | "deleteAll"
+): Promise<void> {
+  const transactionCount = await getGroupTransactionCount(groupId);
+
+  if (transactionCount > 0 && action === "cancel") {
+    return;
+  }
+
   try {
+    if (action === "setNull") {
+      // Update transactions to set groupId and categoryId to null
+      await db
+        .update(transactions)
+        .set({ groupId: null, categoryId: null })
+        .where(eq(transactions.groupId, groupId));
+    } else if (action === "deleteAll") {
+      // Delete all transactions associated with the group
+      await db.delete(transactions).where(eq(transactions.groupId, groupId));
+    }
+
+    // Delete all categories associated with the group
     await db.delete(categories).where(eq(categories.groupId, groupId));
-    await db.delete(groups).where(eq(groups.id, groupId));
+
+    // Delete the group
+    const deletedGroup = await db
+      .delete(groups)
+      .where(eq(groups.id, groupId))
+      .returning();
+
+    if (deletedGroup.length === 0) {
+      throw new Error("Failed to delete group");
+    }
   } catch (error) {
     console.error("Failed to delete group:", error);
-    throw new Error("Failed to delete group: " + error);
+    throw new Error(`Failed to delete group: ${error}`);
   }
 }
 
