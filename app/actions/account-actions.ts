@@ -16,12 +16,15 @@ export async function getAccounts(): Promise<Account[]> {
     const accountsData = await db.select().from(accounts);
     const accountCurrenciesData = await db.select().from(accountCurrencies);
 
-    return accountsData.map((account) => ({
+    const accountsWithCurrencies = accountsData.map((account) => ({
       ...account,
       currencyIds: accountCurrenciesData
         .filter((ac) => ac.accountId === account.id)
         .map((ac) => ac.currencyId),
     }));
+
+    // Sort accounts by name
+    return accountsWithCurrencies.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Failed to fetch accounts:", error);
     throw new Error(`Failed to fetch accounts: ${error}`);
