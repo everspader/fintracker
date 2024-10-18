@@ -23,6 +23,7 @@ export default function CurrencyList({
 }: CurrencyListProps) {
   const [editingCurrency, setEditingCurrency] = useState<string | null>(null);
   const [newCurrency, setNewCurrency] = useState({ code: "", name: "" });
+  const [updatedCurrency, setUpdatedCurrency] = useState<Currency | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [currencyToDelete, setCurrencyToDelete] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -33,10 +34,6 @@ export default function CurrencyList({
     try {
       if (!newCurrency.code.trim()) {
         setErrors({ code: "Currency code cannot be empty" });
-        return;
-      }
-      if (!newCurrency.name.trim()) {
-        setErrors({ name: "Currency name cannot be empty" });
         return;
       }
       await addCurrency(newCurrency);
@@ -53,6 +50,11 @@ export default function CurrencyList({
     }
   };
 
+  const handleEditCurrency = (currency: Currency) => {
+    setEditingCurrency(currency.id);
+    setUpdatedCurrency(currency);
+  };
+
   const handleUpdateCurrency = async (currency: Currency) => {
     setErrors({});
     try {
@@ -60,12 +62,9 @@ export default function CurrencyList({
         setErrors({ [currency.id]: "Currency code cannot be empty" });
         return;
       }
-      if (!currency.name.trim()) {
-        setErrors({ [currency.id]: "Currency name cannot be empty" });
-        return;
-      }
       await updateCurrency(currency);
       setEditingCurrency(null);
+      setUpdatedCurrency(null);
       toast({
         title: "Success",
         description: "Currency updated successfully.",
@@ -141,21 +140,31 @@ export default function CurrencyList({
               {editingCurrency === currency.id ? (
                 <>
                   <Input
-                    value={currency.code}
-                    onChange={(e) => (currency.code = e.target.value)}
+                    value={updatedCurrency?.code}
+                    onChange={(e) =>
+                      setUpdatedCurrency({
+                        ...updatedCurrency!,
+                        code: e.target.value,
+                      })
+                    }
                     className={`col-span-3 ${
                       errors[currency.id] ? "border-red-500" : ""
                     }`}
                   />
                   <Input
-                    value={currency.name}
-                    onChange={(e) => (currency.name = e.target.value)}
+                    value={updatedCurrency?.name}
+                    onChange={(e) =>
+                      setUpdatedCurrency({
+                        ...updatedCurrency!,
+                        name: e.target.value,
+                      })
+                    }
                     className={`col-span-7 ${
                       errors[currency.id] ? "border-red-500" : ""
                     }`}
                   />
                   <Button
-                    onClick={() => handleUpdateCurrency(currency)}
+                    onClick={() => handleUpdateCurrency(updatedCurrency!)}
                     size="sm"
                     className="col-span-1"
                   >
@@ -163,7 +172,10 @@ export default function CurrencyList({
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setEditingCurrency(null)}
+                    onClick={() => {
+                      setEditingCurrency(null);
+                      setUpdatedCurrency(null);
+                    }}
                     size="sm"
                     className="col-span-1"
                   >
@@ -179,7 +191,7 @@ export default function CurrencyList({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingCurrency(currency.id)}
+                    onClick={() => handleEditCurrency(currency)}
                     className="col-span-1"
                   >
                     <Pencil className="h-4 w-4" />

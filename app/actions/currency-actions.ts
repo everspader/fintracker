@@ -16,7 +16,8 @@ export type Currency = {
 
 export async function getCurrencies(): Promise<Currency[]> {
   try {
-    return await db.select().from(currencies);
+    const fetchedCurrencies = await db.select().from(currencies);
+    return fetchedCurrencies.sort((a, b) => a.code.localeCompare(b.code));
   } catch (error) {
     console.error("Failed to fetch currencies:", error);
     throw new Error(`Failed to fetch currencies: ${error}`);
