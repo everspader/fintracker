@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/db";
-import { groups, categories } from "@/db/schema";
+import { groups, categories, transactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export interface Group {
@@ -86,16 +86,45 @@ export async function updateGroup(
       .set({ name: groupName })
       .where(eq(groups.id, groupId));
 
-    // Delete existing categories
-    await db.delete(categories).where(eq(categories.groupId, groupId));
+    // Get existing categories for the group
+    const existingCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.groupId, groupId));
 
-    // Insert new categories
-    await db
-      .insert(categories)
-      .values(categoryNames.map((name) => ({ name, groupId })));
+    // Determine categories to add, update, and remove
+    const existingCategoryNames = existingCategories.map((c) => c.name);
+    const categoriesToAdd = categoryNames.filter(
+      (name) => !existingCategoryNames.includes(name)
+    );
+    const categoriesToRemove = existingCategories.filter(
+      (c) => !categoryNames.includes(c.name)
+    );
+
+    // Add new categories
+    if (categoriesToAdd.length > 0) {
+      await db
+        .insert(categories)
+        .values(categoriesToAdd.map((name) => ({ name, groupId })));
+    }
+
+    // Remove categories that are no longer needed and not referenced by transactions
+    for (const categoryToRemove of categoriesToRemove) {
+      const transactionsUsingCategory = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.categoryId, categoryToRemove.id))
+        .limit(1);
+
+      if (transactionsUsingCategory.length === 0) {
+        await db
+          .delete(categories)
+          .where(eq(categories.id, categoryToRemove.id));
+      }
+    }
   } catch (error) {
     console.error("Failed to update group:", error);
-    throw new Error(`Failed to update group ${error}`);
+    throw new Error(`Failed to update group: ${error}`);
   }
 }
 
