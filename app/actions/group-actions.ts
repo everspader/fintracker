@@ -20,11 +20,13 @@ export async function getGroups(): Promise<Group[]> {
         .where(eq(categories.groupId, group.id));
       return {
         ...group,
-        categories: groupCategories.map((c) => c.name),
+        categories: groupCategories
+          .map((c) => c.name)
+          .sort((a, b) => a.localeCompare(b)),
       };
     })
   );
-  return groupsWithCategories;
+  return groupsWithCategories.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function addGroup(
