@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
@@ -21,10 +21,14 @@ interface GroupListProps {
 export default function GroupList({ groups, onDataChange }: GroupListProps) {
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [newGroup, setNewGroup] = useState({ name: "", categories: "" });
+  const [editedGroups, setEditedGroups] = useState<{
+    [key: string]: Group;
+  }>({});
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleAddGroup = async () => {
     setErrors({});
@@ -37,11 +41,13 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
         .split(",")
         .map((c) => c.trim())
         .filter((c) => c);
+
       if (categories.length === 0) {
         setErrors({ categories: "Please add at least one category" });
         return;
       }
-      await addGroup({ ...newGroup, categories });
+
+      await addGroup(newGroup.name, categories);
       setNewGroup({ name: "", categories: "" });
       toast({
         title: "Success",
@@ -55,19 +61,37 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
     }
   };
 
+  const handleEditGroup = (group: Group) => {
+    setEditingGroup(group.id);
+    console.log(group);
+    setEditedGroups((prev) => ({ ...prev, [group.id]: group }));
+  };
+
   const handleUpdateGroup = async (group: Group) => {
     setErrors({});
     try {
-      if (!group.name.trim()) {
+      const updatedGroup = editedGroups[group.id];
+      if (!updatedGroup.name.trim()) {
         setErrors({ [group.id]: "Group name cannot be empty" });
         return;
       }
-      if (group.categories.length === 0) {
+
+      const categories = updatedGroup.categories[0]
+        .split(",")
+        .filter((c) => c.trim() !== "");
+      if (categories.length === 0) {
         setErrors({ [group.id]: "Please add at least one category" });
         return;
       }
-      await updateGroup(group);
+
+      await updateGroup(group.id, updatedGroup.name, categories);
       setEditingGroup(null);
+      setEditedGroups((prev) => {
+        const newState = { ...prev };
+        delete newState[group.id];
+        return newState;
+      });
+      setEditedGroups({});
       toast({
         title: "Success",
         description: "Group updated successfully.",
@@ -108,31 +132,46 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-12 gap-4">
-        <Input
-          placeholder="New group name"
-          value={newGroup.name}
-          onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
-          className={`col-span-5 ${errors.name ? "border-red-500" : ""}`}
-        />
-        <Input
-          placeholder="Categories (comma-separated)"
-          value={newGroup.categories}
-          onChange={(e) =>
-            setNewGroup({ ...newGroup, categories: e.target.value })
-          }
-          className={`col-span-5 ${errors.categories ? "border-red-500" : ""}`}
-        />
-        <Button onClick={handleAddGroup} className="col-span-2">
-          <Plus className="mr-2 h-4 w-4" /> Add Group
-        </Button>
+    <form
+      ref={formRef}
+      onSubmit={(e) => e.preventDefault()}
+      className="space-y-4"
+    >
+      <div className="space-y-2">
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-5 space-y-1">
+            <Input
+              placeholder="New group name"
+              value={newGroup.name}
+              onChange={(e) =>
+                setNewGroup({ ...newGroup, name: e.target.value })
+              }
+              className={errors.name ? "border-red-500" : ""}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name}</p>
+            )}
+          </div>
+          <div className="col-span-5 space-y-1">
+            <Input
+              placeholder="Categories (comma-separated)"
+              value={newGroup.categories}
+              onChange={(e) =>
+                setNewGroup({ ...newGroup, categories: e.target.value })
+              }
+              className={errors.categories ? "border-red-500" : ""}
+            />
+            {errors.categories && (
+              <p className="text-red-500 text-sm">{errors.categories}</p>
+            )}
+          </div>
+          <Button onClick={handleAddGroup} className="col-span-2">
+            <Plus className="mr-2 h-4 w-4" /> Add Group
+          </Button>
+        </div>
+        {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
       </div>
-      {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-      {errors.categories && (
-        <p className="text-red-500 text-sm">{errors.categories}</p>
-      )}
-      {errors.add && <p className="text-red-500 text-sm">{errors.add}</p>}
+
       <ScrollArea className="h-[400px] w-full">
         <div className="space-y-2">
           {groups.map((group) => (
@@ -142,25 +181,42 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
             >
               {editingGroup === group.id ? (
                 <>
-                  <Input
-                    value={group.name}
-                    onChange={(e) => (group.name = e.target.value)}
-                    className={`col-span-5 ${
-                      errors[group.id] ? "border-red-500" : ""
-                    }`}
-                  />
-                  <Input
-                    value={group.categories.join(", ")}
-                    onChange={(e) =>
-                      (group.categories = e.target.value
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter((c) => c))
-                    }
-                    className={`col-span-5 ${
-                      errors[group.id] ? "border-red-500" : ""
-                    }`}
-                  />
+                  <div className="col-span-5 space-y-1">
+                    <Input
+                      value={editedGroups[group.id]?.name || group.name}
+                      onChange={(e) =>
+                        setEditedGroups((prev) => ({
+                          ...prev,
+                          [group.id]: {
+                            ...(prev[group.id] || group),
+                            name: e.target.value,
+                          },
+                        }))
+                      }
+                      className={errors[group.id] ? "border-red-500" : ""}
+                    />
+                    {errors[group.id] && (
+                      <p className="text-red-500 text-sm">{errors[group.id]}</p>
+                    )}
+                  </div>
+                  <div className="col-span-5 space-y-1">
+                    <Input
+                      value={
+                        editedGroups[group.id]?.categories.join(", ") ||
+                        group.categories.join(",")
+                      }
+                      onChange={(e) =>
+                        setEditedGroups((prev) => ({
+                          ...prev,
+                          [group.id]: {
+                            ...(prev[group.id] || group),
+                            categories: [e.target.value],
+                          },
+                        }))
+                      }
+                      className={errors[group.id] ? "border-red-500" : ""}
+                    />
+                  </div>
                   <Button
                     onClick={() => handleUpdateGroup(group)}
                     size="sm"
@@ -170,7 +226,14 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setEditingGroup(null)}
+                    onClick={() => {
+                      setEditingGroup(null);
+                      setEditedGroups((prev) => {
+                        const newState = { ...prev };
+                        delete newState[group.id];
+                        return newState;
+                      });
+                    }}
                     size="sm"
                     className="col-span-1"
                   >
@@ -192,7 +255,7 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingGroup(group.id)}
+                    onClick={() => handleEditGroup(group)}
                     className="col-span-1"
                   >
                     <Pencil className="h-4 w-4" />
@@ -218,6 +281,6 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
         title="Delete Group"
         description="Are you sure you want to delete this group? This action cannot be undone."
       />
-    </div>
+    </form>
   );
 }
