@@ -2,7 +2,7 @@
 
 import { db } from "@/db/db";
 import { accounts, accountCurrencies, transactions } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export type Account = {
   id: string;
@@ -103,16 +103,25 @@ export async function updateAccount(account: Account): Promise<Account> {
   }
 }
 
-export async function deleteAccount(id: string): Promise<void> {
+export async function getAccountTransactionCount(
+  accountId: string
+): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(transactions)
+    .where(eq(transactions.accountId, accountId));
+  return result[0].count;
+}
+
+export async function deleteAccount(accountId: string): Promise<void> {
   try {
+    await db.delete(transactions).where(eq(transactions.accountId, accountId));
+
     await db
       .delete(accountCurrencies)
-      .where(eq(accountCurrencies.accountId, id));
-    await db
-      .update(transactions)
-      .set({ accountId: null })
-      .where(eq(transactions.accountId, id));
-    await db.delete(accounts).where(eq(accounts.id, id));
+      .where(eq(accountCurrencies.accountId, accountId));
+
+    await db.delete(accounts).where(eq(accounts.id, accountId));
   } catch (error) {
     console.error("Failed to delete account:", error);
     throw new Error(`Failed to delete account: ${error}`);

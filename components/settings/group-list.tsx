@@ -114,17 +114,19 @@ export default function GroupList({ groups, onDataChange }: GroupListProps) {
   };
 
   const confirmDelete = async (action: "cancel" | "setNull" | "deleteAll") => {
+    if (action === "cancel") {
+      setDeleteConfirmOpen(false);
+      setGroupToDelete(null);
+      return;
+    }
     if (groupToDelete) {
-      console.log(action);
       try {
-        if (action !== "cancel") {
-          await deleteGroup(groupToDelete.id, action);
-          toast({
-            title: "Success",
-            description: "Group deleted successfully.",
-          });
-          await onDataChange();
-        }
+        await deleteGroup(groupToDelete.id, action);
+        toast({
+          title: "Success",
+          description: "Group deleted successfully.",
+        });
+        await onDataChange();
       } catch (error) {
         console.error(error);
         toast({

@@ -8,11 +8,21 @@ import { AccountTypeSelect } from "@/components/settings/account-type-select";
 import {
   addAccount,
   updateAccount,
+  getAccountTransactionCount,
   deleteAccount,
   Account,
 } from "@/app/actions/account-actions";
 import { Currency } from "@/app/actions/currency-actions";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AccountType } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -28,14 +38,17 @@ export default function AccountList({
   currencies,
   onDataChange,
 }: AccountListProps) {
-  const [editingAccount, setEditingAccount] = useState<string | null>(null);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [newAccount, setNewAccount] = useState<Omit<Account, "id">>({
     name: "",
     type: "debit",
     currencyIds: [],
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<{
+    id: string;
+    transactionCount: number;
+  } | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
@@ -89,15 +102,21 @@ export default function AccountList({
     }
   };
 
-  const handleDeleteAccount = (id: string) => {
-    setAccountToDelete(id);
+  const handleDeleteAccount = async (id: string) => {
+    const transactionCount = await getAccountTransactionCount(id);
+    setAccountToDelete({ id, transactionCount });
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (action: "cancel" | "deleteAll") => {
+    if (action === "cancel") {
+      setDeleteConfirmOpen(false);
+      setAccountToDelete(null);
+      return;
+    }
     if (accountToDelete) {
       try {
-        await deleteAccount(accountToDelete);
+        await deleteAccount(accountToDelete.id);
         toast({
           title: "Success",
           description: "Account deleted successfully.",
@@ -158,32 +177,42 @@ export default function AccountList({
               key={account.id}
               className="grid grid-cols-12 items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
             >
-              {editingAccount === account.id ? (
+              {editingAccount?.id === account.id ? (
                 <>
                   <Input
-                    value={account.name}
-                    onChange={(e) => (account.name = e.target.value)}
+                    value={editingAccount.name}
+                    onChange={(e) =>
+                      setEditingAccount({
+                        ...editingAccount,
+                        name: e.target.value,
+                      })
+                    }
                     className={`col-span-4 ${
                       errors[account.id] ? "border-red-500" : ""
                     }`}
                   />
                   <AccountTypeSelect
-                    value={account.type as AccountType}
+                    value={editingAccount.type as AccountType}
                     onValueChange={(value: AccountType) =>
-                      (account.type = value)
+                      setEditingAccount({ ...editingAccount, type: value })
                     }
                     className="col-span-3"
                   />
                   <CurrencySelect
                     currencies={currencies}
-                    selectedCurrencies={account.currencyIds}
-                    onChange={(selected) => (account.currencyIds = selected)}
+                    selectedCurrencies={editingAccount.currencyIds}
+                    onChange={(selected) =>
+                      setEditingAccount({
+                        ...editingAccount,
+                        currencyIds: selected,
+                      })
+                    }
                     className={`col-span-3 ${
                       errors[account.id] ? "border-red-500" : ""
                     }`}
                   />
                   <Button
-                    onClick={() => handleUpdateAccount(account)}
+                    onClick={() => handleUpdateAccount(editingAccount)}
                     size="sm"
                     className="col-span-1"
                   >
@@ -216,7 +245,7 @@ export default function AccountList({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingAccount(account.id)}
+                    onClick={() => setEditingAccount(account)}
                     className="col-span-1"
                   >
                     <Pencil className="h-4 w-4" />
@@ -235,13 +264,33 @@ export default function AccountList({
           ))}
         </div>
       </ScrollArea>
-      <DeleteConfirmDialog
-        isOpen={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-        onConfirm={confirmDelete}
-        title="Delete Account"
-        description="Are you sure you want to delete this account? This action cannot be undone."
-      />
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              {accountToDelete && accountToDelete.transactionCount > 0 ? (
+                <>
+                  This account has {accountToDelete.transactionCount}{" "}
+                  transaction{accountToDelete.transactionCount > 1 ? "s" : ""}{" "}
+                  associated with it. Deleting this account will also delete all
+                  associated transactions. Are you sure you want to proceed?
+                </>
+              ) : (
+                "Are you sure you want to delete this account? This action cannot be undone."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => confirmDelete("cancel")}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelete("deleteAll")}>
+              Delete Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

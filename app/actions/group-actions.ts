@@ -140,14 +140,8 @@ export async function getGroupTransactionCount(
 
 export async function deleteGroup(
   groupId: string,
-  action: "cancel" | "setNull" | "deleteAll"
+  action: "setNull" | "deleteAll"
 ): Promise<void> {
-  const transactionCount = await getGroupTransactionCount(groupId);
-
-  if (transactionCount > 0 && action === "cancel") {
-    return;
-  }
-
   try {
     if (action === "setNull") {
       // Update transactions to set groupId and categoryId to null
