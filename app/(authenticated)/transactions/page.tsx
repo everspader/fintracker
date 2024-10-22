@@ -3,7 +3,7 @@ import TransactionDashboard from "@/components/transactions/transactions-dashboa
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTransactions } from "@/app/actions/transactions-actions";
 
-export default async function Home() {
+export default async function Transactions() {
   const initialTransactions = await getTransactions();
 
   return (
