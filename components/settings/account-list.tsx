@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CurrencySelect } from "./currency-select";
-import { AccountTypeSelect } from "@/components/settings/account-type-select";
 import {
   addAccount,
   updateAccount,
@@ -23,7 +22,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AccountType } from "@/db/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AccountType, accountTypeEnum } from "@/db/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
@@ -146,13 +152,23 @@ export default function AccountList({
           }
           className={`col-span-4 ${errors.name ? "border-red-500" : ""}`}
         />
-        <AccountTypeSelect
+        <Select
           value={newAccount.type as AccountType}
           onValueChange={(value: AccountType) =>
             setNewAccount({ ...newAccount, type: value })
           }
-          className="col-span-3"
-        />
+        >
+          <SelectTrigger className="col-span-3">
+            <SelectValue placeholder="Account type" />
+          </SelectTrigger>
+          <SelectContent>
+            {accountTypeEnum.enumValues.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <CurrencySelect
           currencies={currencies}
           selectedCurrencies={newAccount.currencyIds}
@@ -191,13 +207,23 @@ export default function AccountList({
                       errors[account.id] ? "border-red-500" : ""
                     }`}
                   />
-                  <AccountTypeSelect
+                  <Select
                     value={editingAccount.type as AccountType}
                     onValueChange={(value: AccountType) =>
                       setEditingAccount({ ...editingAccount, type: value })
                     }
-                    className="col-span-3"
-                  />
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Account type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountTypeEnum.enumValues.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <CurrencySelect
                     currencies={currencies}
                     selectedCurrencies={editingAccount.currencyIds}
