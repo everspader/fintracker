@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Layers, Wallet, Coins } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import GroupList from "@/components/settings/group-list";
 import AccountList from "@/components/settings/account-list";
 import CurrencyList from "@/components/settings/currency-list";
@@ -29,27 +37,15 @@ export default function SettingsDashboard({
   const { toast } = useToast();
 
   useEffect(() => {
-    const refreshData = async () => {
-      try {
-        const [updatedGroups, updatedAccounts, updatedCurrencies] =
-          await Promise.all([getGroups(), getAccounts(), getCurrencies()]);
-        setGroups(updatedGroups);
-        setAccounts(updatedAccounts);
-        setCurrencies(updatedCurrencies);
-      } catch (error) {
-        console.error("Failed to refresh data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to refresh data. Please try again.",
-          variant: "destructive",
-        });
-      }
+    const fetchData = async () => {
+      const [updatedGroups, updatedAccounts, updatedCurrencies] =
+        await Promise.all([getGroups(), getAccounts(), getCurrencies()]);
+      setGroups(updatedGroups);
+      setAccounts(updatedAccounts);
+      setCurrencies(updatedCurrencies);
     };
 
-    // Refresh data every 5 minutes
-    const intervalId = setInterval(refreshData, 5 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
+    fetchData();
   }, [toast]);
 
   const handleDataChange = async (
@@ -81,6 +77,46 @@ export default function SettingsDashboard({
     }
   };
 
+  const tabContent = [
+    {
+      id: "groups",
+      title: "Groups & Categories",
+      description: "Manage your expense groups and categories",
+      icon: <Layers className="h-4 w-4" />,
+      component: (
+        <GroupList
+          groups={groups}
+          onDataChange={() => handleDataChange("groups")}
+        />
+      ),
+    },
+    {
+      id: "accounts",
+      title: "Accounts",
+      description: "Manage your financial accounts",
+      icon: <Wallet className="h-4 w-4" />,
+      component: (
+        <AccountList
+          accounts={accounts}
+          currencies={currencies}
+          onDataChange={() => handleDataChange("accounts")}
+        />
+      ),
+    },
+    {
+      id: "currencies",
+      title: "Currencies",
+      description: "Manage currencies for your transactions",
+      icon: <Coins className="h-4 w-4" />,
+      component: (
+        <CurrencyList
+          currencies={currencies}
+          onDataChange={() => handleDataChange("currencies")}
+        />
+      ),
+    },
+  ];
+
   return (
     <Card className="w-full">
       <CardContent className="p-6">
@@ -90,29 +126,39 @@ export default function SettingsDashboard({
           className="space-y-6"
         >
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="groups">Groups & Categories</TabsTrigger>
-            <TabsTrigger value="accounts">Accounts</TabsTrigger>
-            <TabsTrigger value="currencies">Currencies</TabsTrigger>
+            {tabContent.map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="flex items-center space-x-2"
+              >
+                {tab.icon}
+                <span>{tab.title}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
-          <TabsContent value="groups" className="space-y-4">
-            <GroupList
-              groups={groups}
-              onDataChange={() => handleDataChange("groups")}
-            />
-          </TabsContent>
-          <TabsContent value="accounts" className="space-y-4">
-            <AccountList
-              accounts={accounts}
-              currencies={currencies}
-              onDataChange={() => handleDataChange("accounts")}
-            />
-          </TabsContent>
-          <TabsContent value="currencies" className="space-y-4">
-            <CurrencyList
-              currencies={currencies}
-              onDataChange={() => handleDataChange("currencies")}
-            />
-          </TabsContent>
+          <AnimatePresence mode="wait">
+            {tabContent.map((tab) => (
+              <TabsContent key={tab.id} value={tab.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-2xl font-semibold">
+                        {tab.title}
+                      </CardTitle>
+                      <CardDescription>{tab.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>{tab.component}</CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            ))}
+          </AnimatePresence>
         </Tabs>
       </CardContent>
     </Card>
