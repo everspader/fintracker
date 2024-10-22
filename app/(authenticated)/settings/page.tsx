@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
-      <Suspense fallback={<Skeleton className="w-full h-[600px]" />}>
+      <Suspense fallback={<Skeleton className="w-full h-full" />}>
         <SettingsDashboard
           initialGroups={groups}
           initialAccounts={accounts}
