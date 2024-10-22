@@ -198,13 +198,15 @@ export default function SidebarComponent() {
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title}>
-                        {item.icon && <item.icon />}
-                        <a href={item.url}>{item.title}</a>
-                        {item.items.length > 0 && (
-                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        )}
-                      </SidebarMenuButton>
+                      <a href={item.url}>
+                        <SidebarMenuButton tooltip={item.title}>
+                          {item.icon && <item.icon />}
+                          {item.title}
+                          {item.items.length > 0 && (
+                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          )}
+                        </SidebarMenuButton>
+                      </a>
                     </CollapsibleTrigger>
                     {item.items.length > 0 && (
                       <CollapsibleContent>
