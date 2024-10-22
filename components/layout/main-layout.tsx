@@ -21,7 +21,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   const menuItems = [
-    { href: "/", label: "Dashboard", icon: Home },
+    { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/transactions", label: "Transactions", icon: BarChart2 },
     { href: "/settings", label: "Settings", icon: Settings },
     { href: "/reports", label: "Reports", icon: PieChart },
