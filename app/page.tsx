@@ -70,7 +70,7 @@ export default function LandingPage() {
             FinanceTrack
           </span>
         </Link>
-        <nav className="hidden md:flex space-x-8">
+        <nav className="hidden md:flex items-center space-x-8">
           <Link
             href="#features"
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
@@ -89,20 +89,23 @@ export default function LandingPage() {
           >
             About
           </Link>
+          <Button variant="outline" asChild>
+            <Link href="/signin">Sign In</Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="text-gray-600 dark:text-gray-300"
+          >
+            {mounted &&
+              (theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              ))}
+          </Button>
         </nav>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="text-gray-600 dark:text-gray-300"
-        >
-          {mounted &&
-            (theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            ))}
-        </Button>
       </header>
       <main className="flex-grow">
         <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
