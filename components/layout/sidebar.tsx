@@ -54,14 +54,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/transactions", label: "Transactions", icon: BarChart2 },
-  { href: "/reports", label: "Reports", icon: PieChart },
-  { href: "/users", label: "Users", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
 const data = {
   user: {
     name: "shadcn",
@@ -120,7 +112,11 @@ const data = {
   ],
 };
 
-export default function SidebarComponent() {
+export default function SidebarComponent({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [activeTeam, setActiveTeam] = React.useState(data.teams[0]);
 
   return (
@@ -323,6 +319,7 @@ export default function SidebarComponent() {
             <SidebarTrigger className="-ml-1" />
           </div>
         </header>
+        {children}
       </SidebarInset>
     </>
   );

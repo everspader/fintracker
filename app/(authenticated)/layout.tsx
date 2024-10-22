@@ -12,8 +12,7 @@ export default function AuthenticatedLayout({
   return (
     <SidebarProvider>
       <div className="flex w-screen h-screen bg-background">
-        <SidebarComponent />
-        <main className="overflow-auto p-6 w-full">{children}</main>
+        <SidebarComponent>{children}</SidebarComponent>
       </div>
     </SidebarProvider>
   );
