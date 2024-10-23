@@ -19,7 +19,7 @@ export const {
   signOut,
 } = NextAuth({
   pages: {
-    signIn: "/signin",
+    signIn: "/auth/signin",
     // error: "/auth/error",
   },
   callbacks: {

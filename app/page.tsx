@@ -90,7 +90,7 @@ export default function LandingPage() {
             About
           </Link>
           <Button variant="outline" asChild>
-            <Link href="/signin">Sign In</Link>
+            <Link href="/auth/signin">Sign In</Link>
           </Button>
           <Button
             variant="ghost"
@@ -118,7 +118,7 @@ export default function LandingPage() {
           </p>
           <div className="flex justify-center space-x-4">
             <Button size="lg" asChild>
-              <Link href="/signup">Get Started</Link>
+              <Link href="/auth/signup">Get Started</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link href="#features">Learn More</Link>
