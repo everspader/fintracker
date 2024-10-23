@@ -19,6 +19,8 @@ import {
   Activity,
 } from "lucide-react";
 
+import { auth } from "@/auth";
+
 // Dummy data for the chart
 const data = [
   { name: "Jan", total: 1500 },
@@ -65,6 +67,9 @@ const recentSales = [
 ];
 
 export default function DashboardPage() {
+  const session = auth();
+  console.log(session);
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">

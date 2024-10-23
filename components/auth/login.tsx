@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,29 +14,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { signUp } from "@/app/actions/auth-actions";
+import { signUpSchema } from "@/schemas";
+
+export type ActionState = {
+  error?: string;
+  success?: string;
+  [key: string]: any; // This allows for additional properties
+};
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
-
-  // const searchParams = useSearchParams();
-  // const redirect = searchParams.get("redirect");
-  // const priceId = searchParams.get("priceId");
-  // const inviteId = searchParams.get("inviteId");
-  // const [state, formAction, pending] = useActionState<ActionState, FormData>(
-  //   mode === "signin" ? signIn : signUp,
-  //   { error: "" },
-  // );
-
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
-    setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/dashboard");
-    }, 3000);
-  }
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(
+    signUp,
+    { error: "" }
+  );
 
   return (
     <div className="flex min-h-screen">
@@ -64,27 +56,44 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
-              {/* <form action={onSubmit}> */}
-              <form onSubmit={onSubmit}>
-                <div className="grid gap-2">
+              <form action={formAction}>
+                {mode === "signup" && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="Your Name"
+                      autoCapitalize="none"
+                      autoComplete="name"
+                      autoCorrect="off"
+                      maxLength={50}
+                      disabled={pending}
+                    />
+                  </div>
+                )}
+                <div className="grid gap-2 mt-4">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="name@example.com"
                     autoCapitalize="none"
                     autoComplete="email"
                     autoCorrect="off"
                     maxLength={50}
-                    disabled={isLoading}
+                    disabled={pending}
                   />
                 </div>
                 <div className="grid gap-2 mt-4">
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
-                    disabled={isLoading}
+                    disabled={pending}
                     autoComplete={
                       mode === "signin" ? "current-password" : "new-password"
                     }
@@ -98,22 +107,31 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                     <Link href="/forgot-password">Forgot your password?</Link>
                   </Button>
                 )}
+                {state?.error && (
+                  <p className="text-sm text-red-500 mt-2">{state.error}</p>
+                )}
+                {state?.success && (
+                  <p className="text-sm text-green-500 mt-2">{state.success}</p>
+                )}
                 <Button
                   className="w-full mt-6"
                   type="submit"
-                  disabled={isLoading}
+                  disabled={pending}
                 >
-                  {isLoading && (
+                  {pending ? (
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  ) : mode === "signin" ? (
+                    "Sign In"
+                  ) : (
+                    "Create Account"
                   )}
-                  {mode === "signin" ? "Sign In" : "Create Account"}
                 </Button>
 
                 {mode === "signin" ? (
                   <p className="mt-4 text-center text-sm text-muted-foreground">
                     Don&apos;t have an account?{" "}
                     <Link
-                      href="/signup"
+                      href="/auth/signup"
                       className="underline underline-offset-4 hover:text-primary"
                     >
                       Sign up
