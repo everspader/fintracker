@@ -43,7 +43,9 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gray-900 p-12 text-white">
         <div className="flex items-center space-x-2">
           <Icons.creditCard className="h-8 w-8" />
-          <span className="text-2xl font-bold">FinanceTrack</span>
+          <Link href="/">
+            <span className="text-2xl font-bold">FinanceTrack</span>
+          </Link>
         </div>
         <div>
           <blockquote className="text-xl italic">
