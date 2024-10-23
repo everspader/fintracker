@@ -19,9 +19,10 @@ export const sessions = pgTable("sessions", {
 });
 
 export const verificationTokens = pgTable("verification_tokens", {
-  identifier: text("identifier").notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
   token: text("token").notNull(),
   expires: timestamp("expires").notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
 });
 
 export type User = typeof users.$inferSelect;
