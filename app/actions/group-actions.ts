@@ -2,7 +2,7 @@
 
 import { db } from "@/db/db";
 import { groups, categories, transactions } from "@/db/schema";
-import { eq, sql, and, isNull } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export interface Group {
   id: string;
