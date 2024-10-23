@@ -23,3 +23,6 @@ export const verificationTokens = pgTable("verification_tokens", {
   token: text("token").notNull(),
   expires: timestamp("expires").notNull(),
 });
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
