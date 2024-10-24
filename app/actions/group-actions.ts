@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/db";
-import { groups, categories, transactions } from "@/db/schema";
+import { db } from "@/lib/db";
+import { groups, categories, transactions } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export interface Group {

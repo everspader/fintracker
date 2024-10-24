@@ -1,8 +1,8 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { db } from "@/db";
+import { db } from "@/lib/db";
 import authConfig from "@/auth.config";
-import { getUserById } from "@/db/queries";
+import { getUserById } from "@/lib/db/queries";
 
 declare module "next-auth" {
   interface Session {

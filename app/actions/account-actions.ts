@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/db";
-import { accounts, accountCurrencies, transactions } from "@/db/schema";
+import { db } from "@/lib/db";
+import { accounts, accountCurrencies, transactions } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export type Account = {

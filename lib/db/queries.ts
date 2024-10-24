@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { verificationTokens } from "@/db/schema";
+import { db } from "@/lib/db";
+import { verificationTokens } from "@/lib/db/schema";
 
 export async function getUserByEmail(email: string) {
   return db.query.users.findFirst({

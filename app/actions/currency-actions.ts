@@ -1,11 +1,11 @@
 "use server";
 
-import { db } from "@/db";
+import { db } from "@/lib/db";
 import {
   currencies,
   accountCurrencies,
   transactions as transactionsTable,
-} from "@/db/schema";
+} from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export type Currency = {

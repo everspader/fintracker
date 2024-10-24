@@ -6,11 +6,11 @@ import bcrypt from "bcryptjs";
 
 import { signIn } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
 import { SignUpSchema, SignInSchema } from "@/lib/schemas";
-import { getUserByEmail } from "@/db/queries";
-import { generateVerificationToken } from "@/db/queries";
+import { getUserByEmail } from "@/lib/db/queries";
+import { generateVerificationToken } from "@/lib/db/queries";
 
 import { redirect } from "next/navigation";
 

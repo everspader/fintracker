@@ -1,13 +1,13 @@
 "use server";
 
-import { db } from "@/db";
+import { db } from "@/lib/db";
 import {
   transactions,
   categories,
   accounts,
   currencies,
   groups,
-} from "@/db/schema";
+} from "@/lib/db/schema";
 import { Transaction } from "@/components/transactions/columns";
 import { eq, inArray, sql } from "drizzle-orm";
 
