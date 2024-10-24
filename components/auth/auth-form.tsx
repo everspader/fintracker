@@ -25,17 +25,18 @@ import {
 } from "@/components/ui/card";
 import { FormError } from "../form-error";
 import { FormSuccess } from "../form-success";
+import { SignInSchema, SignUpSchema } from "@/lib/schemas";
 
 interface AuthFormProps {
   type: "signin" | "signup";
   action: (values: any) => Promise<{ error?: string; success?: string }>;
-  schema: z.ZodSchema<any>;
 }
 
-export function AuthForm({ type, action, schema }: AuthFormProps) {
+export function AuthForm({ type, action }: AuthFormProps) {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+  const schema = type === "signin" ? SignInSchema : SignUpSchema;
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
