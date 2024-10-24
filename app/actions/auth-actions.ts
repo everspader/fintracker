@@ -1,18 +1,17 @@
 "use server";
 
+import { AuthError } from "next-auth";
 import * as z from "zod";
 import bcrypt from "bcryptjs";
-import { eq, and } from "drizzle-orm";
-import { AuthError } from "next-auth";
 
 import { signIn } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { db } from "@/db";
-import { users, NewUser } from "@/db/schema";
+import { users } from "@/db/schema";
 import { SignUpSchema, SignInSchema } from "@/schemas";
 import { getUserByEmail } from "@/db/queries";
 import { generateVerificationToken } from "@/db/queries";
-import { validatedAction } from "@/lib/auth/middleware";
+
 import { redirect } from "next/navigation";
 
 export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
