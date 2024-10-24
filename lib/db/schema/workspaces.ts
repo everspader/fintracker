@@ -1,19 +1,17 @@
-import { pgTable, pgEnum, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { users } from "./users";
+import { transactions } from "./transactions";
+import { groups } from "./groups";
 import { accounts } from "./accounts";
 import { currencies } from "./currencies";
-import { groups } from "./groups";
-import { transactions } from "./transactions";
-import { users } from "./users";
 
 export const workspaces = pgTable("workspaces", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-export const workspaceRole = pgEnum("workspace_role", ["owner"]);
 
 export const userWorkspaces = pgTable("user_workspaces", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -23,8 +21,9 @@ export const userWorkspaces = pgTable("user_workspaces", {
   workspaceId: uuid("workspace_id")
     .notNull()
     .references(() => workspaces.id),
-  role: workspaceRole("role").notNull().default("owner"),
+  role: text("role").notNull().default("member"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const workspacesRelations = relations(workspaces, ({ many }) => ({
@@ -32,7 +31,7 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
   transactions: many(transactions),
   groups: many(groups),
   accounts: many(accounts),
-  currencies: many(currencies), // Add this line
+  currencies: many(currencies),
 }));
 
 export const userWorkspacesRelations = relations(userWorkspaces, ({ one }) => ({

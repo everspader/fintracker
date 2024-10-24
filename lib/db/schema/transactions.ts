@@ -12,13 +12,11 @@ import { currencies } from "./currencies";
 import { groups, categories } from "./groups";
 import { workspaces } from "./workspaces";
 
-// Enums
 export const transactionTypeEnum = pgEnum("transaction_type", [
   "expense",
   "income",
 ]);
 
-// Main Transaction Log Table
 export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
   entryDate: timestamp("entry_date").notNull().defaultNow(),
@@ -33,6 +31,7 @@ export const transactions = pgTable("transactions", {
     .notNull()
     .references(() => workspaces.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({

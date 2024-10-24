@@ -2,7 +2,6 @@ import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { workspaces } from "./workspaces";
 
-// Helper Tables
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -10,6 +9,7 @@ export const groups = pgTable("groups", {
     .notNull()
     .references(() => workspaces.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const categories = pgTable("categories", {
@@ -22,9 +22,9 @@ export const categories = pgTable("categories", {
     .notNull()
     .references(() => workspaces.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Relations
 export const groupsRelations = relations(groups, ({ many, one }) => ({
   categories: many(categories),
   workspace: one(workspaces, {

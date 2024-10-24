@@ -20,7 +20,7 @@ export const currencies = pgTable(
       .notNull()
       .references(() => workspaces.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => {
     return {
