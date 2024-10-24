@@ -68,7 +68,6 @@ const recentSales = [
 
 export default function DashboardPage() {
   const session = auth();
-  console.log(session);
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
