@@ -27,7 +27,7 @@ import {
 import { FormError } from "../form-error";
 import { FormSuccess } from "../form-success";
 import { signUp } from "@/app/actions/auth-actions";
-import { SignUpSchema } from "@/schemas";
+import { SignUpSchema } from "@/lib/schemas";
 
 export type ActionState = {
   error?: string;

@@ -27,7 +27,7 @@ import {
 import { FormError } from "../form-error";
 import { FormSuccess } from "../form-success";
 import { login } from "@/app/actions/auth-actions";
-import { SignInSchema } from "@/schemas";
+import { SignInSchema } from "@/lib/schemas";
 
 export function Login() {
   const [error, setError] = useState<string | undefined>("");
