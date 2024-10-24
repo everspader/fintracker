@@ -1,11 +1,11 @@
-import { db } from "../db";
+import { db } from "@/db";
 import {
   groups,
   categories,
   accounts,
   currencies,
   transactions,
-} from "../db/schema";
+} from "@/db/schema";
 
 async function seed() {
   try {
