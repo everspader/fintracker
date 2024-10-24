@@ -4,7 +4,7 @@ import { AuthError } from "next-auth";
 import * as z from "zod";
 import bcrypt from "bcryptjs";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -78,3 +78,7 @@ export const login = async (values: z.infer<typeof SignInSchema>) => {
     throw error;
   }
 };
+
+export async function handleSignOut() {
+  await signOut({ redirectTo: "/" });
+}

@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import SidebarComponent from "@/components/layout/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";

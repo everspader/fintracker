@@ -111,14 +111,19 @@ const data = {
     },
   ],
 };
-
+import { handleSignOut } from "@/app/actions/auth-actions";
+import { useRouter } from "next/navigation";
 export default function SidebarComponent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [activeTeam, setActiveTeam] = React.useState(data.teams[0]);
+  const router = useRouter();
 
+  const onSignOut = async () => {
+    await handleSignOut();
+  };
   return (
     <>
       <Sidebar collapsible="icon">
@@ -302,7 +307,7 @@ export default function SidebarComponent({
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={onSignOut}>
                     <LogOut />
                     Log out
                   </DropdownMenuItem>
