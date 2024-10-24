@@ -10,6 +10,7 @@ import { relations } from "drizzle-orm";
 import { accounts } from "./accounts";
 import { currencies } from "./currencies";
 import { groups, categories } from "./groups";
+import { workspaces } from "./workspaces";
 
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", [
@@ -27,7 +28,10 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currencyId: uuid("currency_id").references(() => currencies.id),
   description: text("description"),
-  groupId: uuid("group_id").references(() => groups.id), // Remove .notNull()
+  groupId: uuid("group_id").references(() => groups.id),
+  workspaceId: uuid("workspace_id")
+    .notNull()
+    .references(() => workspaces.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -48,5 +52,8 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.groupId],
     references: [groups.id],
   }),
+  workspace: one(workspaces, {
+    fields: [transactions.workspaceId],
+    references: [workspaces.id],
+  }),
 }));
-//

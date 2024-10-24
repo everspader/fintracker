@@ -9,6 +9,7 @@ import {
 import { relations } from "drizzle-orm";
 import { currencies } from "./currencies";
 import { transactions } from "./transactions";
+import { workspaces } from "./workspaces";
 
 export const accountTypeEnum = pgEnum("account_type", [
   "credit",
@@ -20,8 +21,11 @@ export type AccountType = (typeof accountTypeEnum.enumValues)[number];
 
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull().unique(),
+  name: text("name").notNull(),
   type: accountTypeEnum("type").notNull(),
+  workspaceId: uuid("workspace_id")
+    .notNull()
+    .references(() => workspaces.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -40,14 +44,13 @@ export const accountCurrencies = pgTable(
   })
 );
 
-export const accountsRelations = relations(accounts, ({ many }) => ({
+export const accountsRelations = relations(accounts, ({ many, one }) => ({
   currencies: many(accountCurrencies),
   transactions: many(transactions),
-}));
-
-export const currenciesRelations = relations(currencies, ({ many }) => ({
-  accounts: many(accountCurrencies),
-  transactions: many(transactions),
+  workspace: one(workspaces, {
+    fields: [accounts.workspaceId],
+    references: [workspaces.id],
+  }),
 }));
 
 export const accountCurrenciesRelations = relations(

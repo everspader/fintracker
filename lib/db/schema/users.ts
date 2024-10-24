@@ -1,4 +1,6 @@
 import { pgTable, uuid, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { userWorkspaces } from "./workspaces";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -24,6 +26,10 @@ export const verificationTokens = pgTable("verification_tokens", {
   expires: timestamp("expires").notNull(),
   email: varchar("email", { length: 255 }).notNull(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  userWorkspaces: many(userWorkspaces),
+}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
