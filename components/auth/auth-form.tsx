@@ -1,11 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useState, useTransition } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { SignInSchema, SignUpSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +28,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { FormError } from "../ui/form-error";
-import { FormSuccess } from "../ui/form-success";
+import { FormError } from "@/components/ui/form-error";
+import { FormSuccess } from "@/components/ui/form-success";
 
 interface AuthFormProps {
   type: "signin" | "signup";
@@ -37,9 +38,10 @@ interface AuthFormProps {
 
 export function AuthForm({ type, action }: AuthFormProps) {
   const router = useRouter();
-  const [isPending, startTransition] = React.useTransition();
-  const [error, setError] = React.useState<string | undefined>("");
-  const [success, setSuccess] = React.useState<string | undefined>("");
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const schema = type === "signin" ? SignInSchema : SignUpSchema;
   const form = useForm<z.infer<typeof schema>>({
@@ -157,12 +159,36 @@ export function AuthForm({ type, action }: AuthFormProps) {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="password"
-                              placeholder="******"
-                              disabled={isPending}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="********"
+                                {...field}
+                                className="pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                tabIndex={-1}
+                              >
+                                {showPassword ? (
+                                  <EyeOff
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                ) : (
+                                  <Eye className="h-4 w-4" aria-hidden="true" />
+                                )}
+                                <span className="sr-only">
+                                  {showPassword
+                                    ? "Hide password"
+                                    : "Show password"}
+                                </span>
+                              </Button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
