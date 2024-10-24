@@ -39,7 +39,7 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
   console.log(verificationToken);
   // TODO: Send verification token email
 
-  return { success: "Confirmation e-mail sent!" };
+  return { success: "Account created successfully!" };
 };
 
 export const login = async (values: z.infer<typeof SignInSchema>) => {

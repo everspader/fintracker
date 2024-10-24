@@ -1,10 +1,13 @@
 "use client";
 
+import * as React from "react";
 import * as z from "zod";
-import { useTransition, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { SignInSchema, SignUpSchema } from "@/lib/schemas";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,19 +16,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FormError } from "../form-error";
-import { FormSuccess } from "../form-success";
-import { SignInSchema, SignUpSchema } from "@/lib/schemas";
+
+import { FormError } from "../ui/form-error";
+import { FormSuccess } from "../ui/form-success";
 
 interface AuthFormProps {
   type: "signin" | "signup";
@@ -33,31 +36,43 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ type, action }: AuthFormProps) {
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
-  const [isPending, startTransition] = useTransition();
-  const schema = type === "signin" ? SignInSchema : SignUpSchema;
+  const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
+  const [error, setError] = React.useState<string | undefined>("");
+  const [success, setSuccess] = React.useState<string | undefined>("");
 
+  const schema = type === "signin" ? SignInSchema : SignUpSchema;
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
-      ...(type === "signup" ? { name: "" } : {}),
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof schema>) => {
+  function onSubmit(values: z.infer<typeof schema>) {
     setError("");
     setSuccess("");
 
-    startTransition(() => {
-      action(values).then((data) => {
-        setError(data.error);
-        setSuccess(data.success);
-      });
+    startTransition(async () => {
+      try {
+        const result = await action(values);
+        if (result.error) {
+          setError(result.error);
+        } else if (result.success) {
+          setSuccess(result.success);
+          form.reset();
+          if (type === "signin") {
+            router.push("/dashboard");
+          }
+        }
+      } catch (error) {
+        setError("An unexpected error occurred. Please try again.");
+      }
     });
-  };
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -83,6 +98,11 @@ export function AuthForm({ type, action }: AuthFormProps) {
               <CardTitle className="text-2xl text-center">
                 {type === "signin" ? "Sign In" : "Create an Account"}
               </CardTitle>
+              <CardDescription>
+                {type === "signin"
+                  ? "Enter your credentials to access your account"
+                  : "Create an account to get started"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <Form {...form}>
@@ -149,10 +169,31 @@ export function AuthForm({ type, action }: AuthFormProps) {
                       )}
                     />
                   </div>
-
-                  <FormError message={error} />
-                  <FormSuccess message={success} />
-
+                  {type === "signup" && (
+                    <div className="grid gap-2 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="********"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                  <div className="grid gap-2 mt-4">
+                    <FormError message={error} />
+                    <FormSuccess message={success} />
+                  </div>
                   {type === "signin" && (
                     <Button
                       variant="link"
