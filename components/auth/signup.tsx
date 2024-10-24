@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/ui/icons";
 import {
   Card,
@@ -27,28 +26,34 @@ import {
 } from "@/components/ui/card";
 import { FormError } from "../form-error";
 import { FormSuccess } from "../form-success";
-import { login } from "@/app/actions/auth-actions";
-import { SignInSchema } from "@/schemas";
+import { signUp } from "@/app/actions/auth-actions";
+import { SignUpSchema } from "@/schemas";
 
-export function Login() {
+export type ActionState = {
+  error?: string;
+  success?: string;
+  [key: string]: any; // This allows for additional properties
+};
+
+export function SignUp() {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
-
-  const form = useForm<z.infer<typeof SignInSchema>>({
-    resolver: zodResolver(SignInSchema),
+  const form = useForm<z.infer<typeof SignUpSchema>>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
       email: "",
       password: "",
+      name: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof SignInSchema>) => {
+  const onSubmit = (values: z.infer<typeof SignUpSchema>) => {
     setError("");
     setSuccess("");
 
     startTransition(() => {
-      login(values).then((data) => {
+      signUp(values).then((data) => {
         setError(data.error);
         setSuccess(data.success);
       });
@@ -76,11 +81,33 @@ export function Login() {
         <div className="max-w-sm mx-auto w-full">
           <Card className="w-[350px]">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Sign In</CardTitle>
+              <CardTitle className="text-2xl text-center">
+                Create an Account
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
+                  <div className="grid gap-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="John Doe"
+                              disabled={isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="grid gap-2 mt-4">
                     <FormField
                       control={form.control}
@@ -126,13 +153,6 @@ export function Login() {
                   <FormSuccess message={success} />
 
                   <Button
-                    variant="link"
-                    className="px-0 text-sm text-muted-foreground"
-                  >
-                    <Link href="/forgot-password">Forgot your password?</Link>
-                  </Button>
-
-                  <Button
                     className="w-full mt-6"
                     type="submit"
                     disabled={isPending}
@@ -140,22 +160,42 @@ export function Login() {
                     {isPending ? (
                       <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      "Sign In"
+                      "Create Account"
                     )}
                   </Button>
 
                   <p className="mt-4 text-center text-sm text-muted-foreground">
-                    Don&apos;t have an account?{" "}
+                    Already have an account?{" "}
                     <Link
-                      href="/auth/signup"
+                      href="/signin"
                       className="underline underline-offset-4 hover:text-primary"
                     >
-                      Sign up
+                      Sign in
                     </Link>
                   </p>
                 </form>
               </Form>
             </CardContent>
+
+            <CardFooter>
+              <p className="px-8 text-center text-sm text-muted-foreground">
+                By clicking continue, you agree to our{" "}
+                <Link
+                  href="/terms"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </CardFooter>
           </Card>
         </div>
       </div>

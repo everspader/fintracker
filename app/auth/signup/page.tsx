@@ -1,5 +1,5 @@
-import { Login } from "@/components/auth/login";
+import { SignUp } from "@/components/auth/signup";
 
 export default function SignInPage() {
-  return <Login mode="signup" />;
+  return <SignUp />;
 }

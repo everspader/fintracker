@@ -3,81 +3,79 @@
 import * as z from "zod";
 import bcrypt from "bcryptjs";
 import { eq, and } from "drizzle-orm";
+import { AuthError } from "next-auth";
+
+import { signIn } from "@/auth";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { db } from "@/db";
 import { users, NewUser } from "@/db/schema";
-import { signUpSchema } from "@/schemas";
+import { SignUpSchema, SignInSchema } from "@/schemas";
 import { getUserByEmail } from "@/db/queries";
 import { generateVerificationToken } from "@/db/queries";
 import { validatedAction } from "@/lib/auth/middleware";
-import { hashPassword } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
-// export const signUp = async (values: z.infer<typeof RegisterSchema>) => {
-//   const validatedFields = RegisterSchema.safeParse(values);
+export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
+  const validatedFields = SignUpSchema.safeParse(values);
 
-//   if (!validatedFields.success) {
-//     return { error: "Invalid fields" };
-//   }
-
-//   const { email, password, name } = validatedFields.data;
-//   const hashedPassword = await bcrypt.hash(password, 10);
-
-//   const existingUser = await getUserByEmail(email);
-
-//   if (existingUser) {
-//     return { error: "Email already in use" };
-//   }
-
-//   await db.insert(users).values({
-//     email,
-//     name,
-//     passwordHash: hashedPassword,
-//   });
-
-// const verificationToken = await generateVerificationToken(email);
-//   console.log(verificationToken);
-//   // TODO: Send verification token email
-
-//   return { success: "Confirmation e-mail sent!" };
-// };
-
-export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, name } = data;
-
-  const existingUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  if (existingUser.length > 0) {
-    return { error: "Failed to create user. Please try again." };
+  if (!validatedFields.success) {
+    return { error: "Invalid fields" };
   }
 
-  const passwordHash = await hashPassword(password);
+  const { email, password, name } = validatedFields.data;
+  const existingUser = await getUserByEmail(email);
 
-  const newUser: NewUser = {
-    name,
+  if (existingUser) {
+    return { error: "Email already in use" };
+  }
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await db.insert(users).values({
     email,
-    passwordHash,
-  };
-
-  const [createdUser] = await db.insert(users).values(newUser).returning();
+    name,
+    passwordHash: hashedPassword,
+  });
 
   const verificationToken = await generateVerificationToken(email);
   console.log(verificationToken);
+  // TODO: Send verification token email
 
-  if (!createdUser) {
-    return { error: "Failed to create user. Please try again." };
+  return { success: "Confirmation e-mail sent!" };
+};
+
+export const login = async (values: z.infer<typeof SignInSchema>) => {
+  const validatedFields = SignInSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    return { error: "Invalid fields" };
   }
 
-  // Create a new group if there's no invitation
-  // await logActivity(groupId, createdUser.id, ActivityType.CREATE_TEAM);
+  const { email, password } = validatedFields.data;
 
-  // await Promise.all([
-  //   logActivity(groupId, createdUser.id, ActivityType.SIGN_UP),
-  //   setSession(createdUser),
-  // ]);
+  const existingUser = await getUserByEmail(email);
 
-  redirect("/dashboard");
-});
+  if (!existingUser || !existingUser.email || !existingUser.passwordHash) {
+    return { error: "User does not exist" };
+  }
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: DEFAULT_LOGIN_REDIRECT,
+    });
+    redirect("/dashboard");
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin": {
+          return { error: "Invalid credentials!" };
+        }
+        default:
+          return { error: "Something went wrong" };
+      }
+    }
+
+    throw error;
+  }
+};

@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 // import GitHub from "next-auth/providers/github";
 // import Google from "next-auth/providers/google";
 
-import { signInSchema } from "@/schemas";
+import { SignInSchema } from "@/schemas";
 import { getUserByEmail } from "@/db/queries";
 
 export default {
@@ -19,7 +19,7 @@ export default {
     // }),
     Credentials({
       async authorize(credentials) {
-        const validatedFields = signInSchema.safeParse(credentials);
+        const validatedFields = SignInSchema.safeParse(credentials);
 
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;

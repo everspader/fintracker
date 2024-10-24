@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const signInSchema = z.object({
+export const SignInSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address",
   }),
@@ -9,7 +9,7 @@ export const signInSchema = z.object({
   }),
 });
 
-export const signUpSchema = z.object({
+export const SignUpSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address",
   }),
